@@ -7,8 +7,6 @@ This is the GitHub README for a full-featured music streaming service designed t
 
 - Global Content Delivery (CDN): We leverage a global Content Delivery Network (CDN) to distribute music files closer to every user. This results in fast load times and reliable playback, regardless of your geographical location.
 
-- Vast Music Library: Access millions of tracks, albums, and artists across all genres.
-
 - Search and Discovery: Powerful search functionality allows users to quickly find the artists, songs, or albums they are looking for.
 
 - User Profiles & Social Features: Users can manage their listening data, follow other accounts, and share music with friends.
