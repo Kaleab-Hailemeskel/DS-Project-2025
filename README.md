@@ -1,5 +1,5 @@
 # DS-Project-2025
-### A Next-Generation Streaming Service
+### A music Streaming Service
 This is the GitHub README for a full-featured music streaming service designed to deliver a high-quality, uninterrupted audio experience. The platform is built for performance and scale, focusing on robust content delivery and a wide selection of music.
 
 ### ✨ Core Features
