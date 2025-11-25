@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  user-service:
+    build: ../services/user-service
+    container_name: user-service
+    ports:
+      - "8001:8080"
+
+  playlist-service:
+    build: ../services/playlist-service
+    container_name: playlist-service
+    ports:
+      - "8002:8080"
+
+  song-service:
+    build: ../services/song-service
+    container_name: song-service
+    ports:
+      - "8003:8080"
+
+  adaptive-engine:
+    build: ../services/adaptive-engine
+    container_name: adaptive-engine
+    ports:
+      - "8004:8080"
+
+  api-gateway:
+    build: ../api-gateway
+    container_name: api-gateway
+    ports:
+      - "8000:80"
+    depends_on:
+      - user-service
+      - playlist-service
+      - song-service
+      - adaptive-engine
