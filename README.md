@@ -12,20 +12,8 @@ This is the GitHub README for a full-featured music streaming service designed t
 - User Profiles & Social Features: Users can manage their listening data, follow other accounts, and share music with friends.
 
 
-ds-project/
-├── docker/
-│   ├── docker-compose.yml
-│   ├── nginx/nginx.conf
-│   └── postgres/init.sql
-├── services/
-│   ├── user-service/
-│   ├── playlist-service/
-│   ├── song-service/
-│   ├── adaptive-engine/
-│   └── streaming-service/
-├── api-gateway/
-├── client/                 ← (frontend team work)
-└── README.md             
+<img width="472" height="453" alt="image" src="https://github.com/user-attachments/assets/6f578580-628a-40b7-9fe6-0a129f0daf2e" />
+
 text## Features Implemented
 - Nginx reverse proxy (single entry point)
 - PostgreSQL with auto-initialized tables
