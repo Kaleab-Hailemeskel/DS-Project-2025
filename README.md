@@ -47,46 +47,7 @@ Bashcd docker
 docker compose up -d
 3. Stop everything
 Bashdocker compose down -v
-Service URLs (via API Gateway)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Service URLs (via API Gateway
 
 ServiceEndpointDirect PortAPI Gatewayhttp://localhost:80008000User Servicehttp://localhost:8000/api/users8001Playlist Servicehttp://localhost:8000/api/playlists8002Song Servicehttp://localhost:8000/api/songs8003Adaptive Enginehttp://localhost:8000/api/adaptive8004Streaming Servicehttp://localhost:8000/api/stream8005
 Quick health checks
