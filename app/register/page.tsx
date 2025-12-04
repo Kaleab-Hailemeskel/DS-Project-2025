@@ -3,10 +3,7 @@ import { Button } from "@heroui/button";
 import {Form} from "@heroui/form";
 import { Input } from "@heroui/input";
 import coverImg from "../../assets/register.png"
-
 import React from "react";
-
-
 export default function Register() {
     const [action, setAction] = React.useState(null);
   return (
@@ -23,9 +20,7 @@ export default function Register() {
          <h1 className="text-white text-5xl font-bold mb-3 text-shadow-lg">
   Welcome
 </h1>
-
           </div>
-
           {/* right */}
           <div className="w-full lg:w-1/2 py-16 px-12">
             <h2 className="text-3xl mb-4">Register</h2>
@@ -34,15 +29,41 @@ export default function Register() {
             </p>
             <Form
       className="w-full max-w-xs flex flex-col gap-4"
-      onReset={() => setAction("reset")}
-      onSubmit={(e) => {
+      onReset={() => {
+        setAction("reset");
+        console.log('Form reset');
+      }}
+      onSubmit={async (e) => {
         e.preventDefault();
         let data = Object.fromEntries(new FormData(e.currentTarget));
-
-        setAction(`submit ${JSON.stringify(data)}`);
+        console.log('Form data being sent:', data);
+        setAction(`submitting...`);
+        try {
+          Console.log("Printing Data :" + data.stringify)
+          const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+          });
+          if (response.ok) {
+            const result = await response.json();
+            console.log('API response:', result);
+            setAction(`submit success: ${JSON.stringify(result)}`);
+          } else {
+            const error = await response.json();
+            console.log('API error:', error);
+            setAction(`submit error: ${JSON.stringify(error)}`);
+          }
+        } catch (error) {
+          console.error('Fetch error:', error);
+          setAction(`error: ${error.message}`);
+        }
       }}
     >
-        <div className="flex row gap-3"><Input
+        <div className="flex row gap-3">
+        <Input
         isRequired
         errorMessage="Please enter a valid username"
         label="First Name"
@@ -51,7 +72,6 @@ export default function Register() {
         placeholder="Enter your first name"
         type="text"
       />
-
       <Input
         isRequired
         errorMessage="Please enter a valid username"
@@ -61,8 +81,15 @@ export default function Register() {
         placeholder="Enter your last name"
         type="text"
       /> </div>
-      
-
+     <Input
+        isRequired
+        errorMessage="Please enter a valid email"
+        label="Email"
+        labelPlacement="outside"
+        name="email"
+        placeholder="Enter your email"
+        type="text"
+      />
       <Input
         isRequired
         errorMessage="Please enter a valid password"
@@ -77,7 +104,7 @@ export default function Register() {
         errorMessage="Please enter a password that matches your first one"
         label="Confirm Password"
         labelPlacement="outside"
-        name="Confrim password"
+        name="confirm_password"
         placeholder="Confirm your password"
         type="password"
       />
