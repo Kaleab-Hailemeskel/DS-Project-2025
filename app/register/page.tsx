@@ -3,11 +3,25 @@ import { Button } from "@heroui/button";
 import {Form} from "@heroui/form";
 import { Input } from "@heroui/input";
 import coverImg from "../../assets/register.png"
+import { motion } from "framer-motion";
 import React from "react";
+
 export default function Register() {
+
+  const variants = {
+    hidden: { opacity: 0, y: 50 }, // Start invisible and 50px below
+    visible: { opacity: 1, y: 0 }, // Fade in and slide up to position
+  };
+
     const [action, setAction] = React.useState(null);
   return (
       <div className="container mx-auto">
+        <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={variants}
+      transition={{ duration: 0.8, ease: "easeOut" }} // Smooth timing
+    >
         {/* wrapper */}
         <div className="flex flex-col lg:flex-row w-10/12 lg:w-8/12 bg-black-300 rounded-xl mx-auto shadow-lg overflow-hidden">
           {/* left */}
@@ -124,6 +138,7 @@ export default function Register() {
     </Form>
           </div>
         </div>
+     </motion.div>
       </div>
   );
 }
