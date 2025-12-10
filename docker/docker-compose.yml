@@ -1,0 +1,212 @@
+version: "3.9"
+
+services:
+  # ======================= BACKEND SERVICES ========================
+  user-service:
+    build: ../services/user-service
+    container_name: user-service
+    ports:
+      - "8001:8080"
+    environment:
+      - SERVICE_PORT=8080
+      - POSTGRES_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
+      - JWT_SECRET=dev-secret-change-me  # DEV ONLY - must replace in prod or use Docker secrets
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  playlist-service:
+    build: ../services/playlist-service
+    container_name: playlist-service
+    ports:
+      - "8002:8080"
+    environment:
+      - SERVICE_PORT=8080
+      - POSTGRES_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  song-service:
+    build: ../services/song-service
+    container_name: song-service
+    ports:
+      - "8003:8080"
+    environment:
+      - SERVICE_PORT=8080
+      - POSTGRES_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  adaptive-engine:
+    build: ../services/adaptive-engine
+    container_name: adaptive-engine
+    ports:
+      - "8004:8080"
+    environment:
+      - SERVICE_PORT=8080
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  streaming-service:
+    build: ../services/streaming-service
+    container_name: streaming-service
+    ports:
+      - "8005:8080"
+    environment:
+      - SERVICE_PORT=8080
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # ====================== API GATEWAY (Nginx) ======================
+  api-gateway:
+    image: nginx:alpine
+    container_name: api-gateway
+    ports:
+      - "8000:80"
+    volumes:
+      - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - user-service
+      - playlist-service
+      - song-service
+      - adaptive-engine
+      - streaming-service
+    networks:
+      - app-network
+
+  # ====================== INFRASTRUCTURE ======================
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - app-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    depends_on:
+      zookeeper:
+        condition: service_started
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"  
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    
+    networks:
+      - app-network
+
+  # ====================== DEVELOPER TOOLS ======================
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: kafka:9093
+    depends_on:
+      - kafka
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
