@@ -1,5 +1,5 @@
 package main
-
+ // Simple streaming service main file
 import (
 	"fmt"
 	"net/http"
