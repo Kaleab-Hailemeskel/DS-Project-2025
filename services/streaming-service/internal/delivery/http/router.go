@@ -9,6 +9,8 @@ func RegisterStreamRoutes(router *gin.Engine, streamController IStreamController
 	{
 		streamGroup.GET("/:filename", streamController.GetManifasteFile)
 		streamGroup.GET("/:filename/:segment", streamController.GetStreamFile)
+		streamGroup.GET("/trial", streamController.GetStreamFileTrial)
+		
 	}
 }
 

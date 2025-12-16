@@ -24,6 +24,18 @@ func (s *StreamController) GetManifasteFile(ctx *gin.Context) {
 	ctx.File(filePath)
 }
 
+func (s *StreamController) GetManifasteFileTrial(ctx *gin.Context) {
+	songId := ctx.Param("filename")
+	filePath, err := s.streamUsecase.GetStreamFilePathTrial("index.m3u8")
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "HLS Manifest file not found. Did you run the segmenter first?"})
+		return
+	}
+	// Set the correct Content-Type for the HLS manifest
+	ctx.Header("Content-Type", "application/vnd.apple.mpegurl")
+	ctx.File(filePath)
+}
+
 // GetStreamFilePath implements IStreamController.
 func (s *StreamController) GetStreamFile(ctx *gin.Context) {
 	songId := ctx.Param("filename")
