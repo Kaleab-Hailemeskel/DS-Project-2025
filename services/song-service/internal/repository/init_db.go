@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
 	"song-service/api/config"
 	"song-service/api/internal/domain"
 
@@ -46,7 +47,8 @@ func InitRedisClient() *redis.Client {
 }
 func InitPostgresDB() *gorm.DB {
 	// Implementation for initializing PostgreSQL DB connection
-
+	log.Println("initializing Postgres DB connection...")
+	
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 		config.POSTGRES_HOST,
 		config.POSTGRES_USER,

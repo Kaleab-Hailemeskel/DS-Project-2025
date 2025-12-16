@@ -5,6 +5,7 @@ import (
 	"song-service/api/config"
 	"song-service/api/internal/domain"
 	"song-service/api/internal/repository"
+	"strconv"
 )
 
 type SearchEngineUsecase struct {
@@ -28,13 +29,24 @@ func (s *SearchEngineUsecase) IndexSong(song *domain.Song) error {
 }
 
 // SearchSongsByTitlePrefix implements ISearchEngineUsecase.
-func (s *SearchEngineUsecase) SearchSongsByTitlePrefix(titlePrefix string, offset int64, page int64) ([]*domain.Song, error) {
-	newOffSet := offset + (page-1)*config.MAX_PAGE_SIZE
-	return s.redisSearchRepo.SearchSongsByTitlePrefix(context.Background(), titlePrefix, newOffSet, page)
+func (s *SearchEngineUsecase) SearchSongsByTitlePrefix(titlePrefix, offset, page string) ([]*domain.Song, error) {
+	// Convert offset and page to integers
+	offsetInt, err := strconv.ParseInt(offset, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	pageInt, err := strconv.ParseInt(page, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	// Calculate the new offset based on page and offset
+	newOffSet := offsetInt + (pageInt-1)*config.MAX_PAGE_SIZE
+	return s.redisSearchRepo.SearchSongsByTitlePrefix(context.Background(), titlePrefix, newOffSet, pageInt)
 }
 
-func NewSearchEngineUsecase(songRepo_ repository.ISongRepo) ISearchEngineUsecase {
+func NewSearchEngineUsecase(songRepo_ repository.ISongRepo, redisRepo_ repository.IRedisSearchRepo) ISearchEngineUsecase {
 	return &SearchEngineUsecase{
-		songRepo: songRepo_,
+		songRepo:        songRepo_,
+		redisSearchRepo: redisRepo_,
 	}
 }

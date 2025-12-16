@@ -9,12 +9,17 @@ import (
 
 func main() {
 	// Initialize main PostgreSQL repository and passing the gorm to NewSongRepository
+	config.InitEnv()
 	postresDb := repository.InitPostgresDB()
+	redisDb := repository.InitRedisClient()
 	songRepo := repository.NewSongRepository(postresDb)
+	redisSearchRepo := repository.NewRedisRepository(redisDb)
 	songUsecase := usecase.NewUploadUsecase(songRepo)
 	songController := http.NewUploadController(songUsecase)
-	
+	searchUsecase := usecase.NewSearchEngineUsecase(songRepo, redisSearchRepo)
+	searchController := http.NewSearchController(searchUsecase)
+
 	// Further setup like starting the server would go here
-	songServer := http.InitRouter(songController)
+	songServer := http.InitRouter(songController, searchController)
 	songServer.Run(":" + config.SERVER_PORT) // Start the server
 }

@@ -11,7 +11,7 @@ type IUploadUsecase interface {
 type ISearchEngineUsecase interface {
 	// 1. Primary Search Logic (The core predictive suggestion feature)
 	// This function remains focused on prefix matching for the main query field (Title).
-	SearchSongsByTitlePrefix(titlePrefix string, offset, page int64) ([]*domain.Song, error)
+	SearchSongsByTitlePrefix(titlePrefix string, offset, page string) ([]*domain.Song, error)
 
 	// 2. Search & Filtering Logic (Including Genre/Year)
 

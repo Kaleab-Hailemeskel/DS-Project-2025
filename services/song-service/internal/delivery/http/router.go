@@ -10,11 +10,19 @@ func RegisterUploadRoutes(router *gin.Engine, uploadController IUploadController
 		uploadGroup.POST("/song", uploadController.UploadFileToArchive)
 	}
 }
+func RegisterSearchRoutes(router *gin.Engine, searchController ISearchController) {
+	searchGroup := router.Group("/search")
+	{
+		searchGroup.GET("/songs", searchController.SearchSongs)
+	}
+}	
 
-func InitRouter(uploadController IUploadController) *gin.Engine {
+func InitRouter(uploadController IUploadController, searchController ISearchController) *gin.Engine {
 	router := gin.Default()
 
 	// Register upload routes
-	RegisterUploadRoutes(router, uploadController)
+	RegisterUploadRoutes(router, uploadController)	
+	// Register search routes
+	RegisterSearchRoutes(router, searchController)
 	return router
 }
