@@ -17,6 +17,10 @@ var (
 	POSTGRES_PASSWORD string
 	POSTGRES_DB       string
 	SEGMENT_DURATION  int
+	MAX_PAGE_SIZE     int64
+	REDIS_ADDR        string
+	REDIS_PASSWORD    string
+	REDIS_DB          int
 )
 
 func InitEnv() {
@@ -37,6 +41,13 @@ func InitEnv() {
 	if SEGMENT_DURATION == 0 {
 		SEGMENT_DURATION = 10 // default segment duration
 	}
+	MAX_PAGE_SIZE, _ = strconv.ParseInt(getEnv("MAX_PAGE_SIZE"), 10, 64)
+	if MAX_PAGE_SIZE == 0 {
+		MAX_PAGE_SIZE = 10 // default max page size
+	}
+	REDIS_ADDR = getEnv("REDIS_ADDR")
+	REDIS_PASSWORD = getEnv("REDIS_PASSWORD")
+	REDIS_DB, _ = strconv.Atoi(getEnv("REDIS_DB"))
 }
 
 func getEnv(key string) string {
