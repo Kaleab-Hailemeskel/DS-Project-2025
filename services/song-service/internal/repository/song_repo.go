@@ -21,7 +21,7 @@ type SongRepository struct {
 }
 
 // NewSongRepository creates a new repository for the given GORM DB instance.
-func NewSongRepository(db *gorm.DB) domain.ISongRepo {
+func NewSongRepository(db *gorm.DB) ISongRepo {
 	// AutoMigrate is called here to ensure the table structure is correct.
 	// In a real application, this might be handled by migration tools.
 	err := db.AutoMigrate(&domain.Song{})

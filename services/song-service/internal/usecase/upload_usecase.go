@@ -2,10 +2,11 @@ package usecase
 
 import (
 	"song-service/api/internal/domain"
+	"song-service/api/internal/repository"
 )
 
 type UploadUsecase struct {
-	songRepo domain.ISongRepo
+	songRepo repository.ISongRepo
 }
 
 // UploadFileToArchive implements IUploadUsecase.
@@ -14,7 +15,7 @@ func (u *UploadUsecase) SaveSongMetaData(songMetaData *domain.Song) (*domain.Son
 	return u.songRepo.SaveSong(songMetaData) //? save the song's metadata
 }
 
-func NewUploadUsecase(songRepo_ domain.ISongRepo) IUploadUsecase {
+func NewUploadUsecase(songRepo_ repository.ISongRepo) IUploadUsecase {
 	return &UploadUsecase{
 		songRepo: songRepo_,
 	}
