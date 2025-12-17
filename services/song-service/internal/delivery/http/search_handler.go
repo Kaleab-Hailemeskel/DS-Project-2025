@@ -1,6 +1,8 @@
 package http
 
 import (
+	"fmt"
+	"song-service/api/config"
 	"song-service/api/internal/usecase"
 
 	"github.com/gin-gonic/gin"
@@ -13,8 +15,8 @@ type SearchController struct {
 // SearchSongs implements ISearchController.
 func (s *SearchController) SearchSongs(ctx *gin.Context) {
 	titlePrefix := ctx.Query("title_prefix")
-	offset := ctx.DefaultQuery("offset", "0")
-	page := ctx.DefaultQuery("page", "1")
+	offset := ctx.DefaultQuery("page-limit", fmt.Sprint(config.MAX_PAGE_SIZE))
+	page := ctx.DefaultQuery("page-number", "1")
 
 	// Call the usecase to search songs
 	songs, err := s.searchUsecase.SearchSongsByTitlePrefix(titlePrefix, offset, page)
