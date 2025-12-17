@@ -12,7 +12,7 @@ type StreamController struct {
 }
 
 // GetManifaste implements IStreamController.
-func (s *StreamController) GetManifasteFile(ctx *gin.Context) {
+func (s *StreamController) GetManifestFile(ctx *gin.Context) {
 	songId := ctx.Param("filename")
 	filePath, err := s.streamUsecase.GetStreamFilePath(songId, "index.m3u8")
 	if err != nil {

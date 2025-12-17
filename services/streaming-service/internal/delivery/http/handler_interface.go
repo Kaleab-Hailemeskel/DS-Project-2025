@@ -6,6 +6,5 @@ import (
 
 type IStreamController interface {
 	GetStreamFile(ctx *gin.Context)
-	GetManifasteFile(ctx *gin.Context)
+	GetManifestFile(ctx *gin.Context)
 }
-
