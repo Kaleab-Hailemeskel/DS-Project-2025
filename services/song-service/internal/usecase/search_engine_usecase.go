@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"song-service/api/config"
+	"log"
 	"song-service/api/internal/domain"
 	"song-service/api/internal/repository"
 	"strconv"
@@ -29,19 +29,40 @@ func (s *SearchEngineUsecase) IndexSong(song *domain.Song) error {
 }
 
 // SearchSongsByTitlePrefix implements ISearchEngineUsecase.
-func (s *SearchEngineUsecase) SearchSongsByTitlePrefix(titlePrefix, offset, page string) ([]*domain.Song, error) {
-	// Convert offset and page to integers
-	offsetInt, err := strconv.ParseInt(offset, 10, 64)
+func (s *SearchEngineUsecase) SearchSongsByTitlePrefix(titlePrefix, pageNumber, pageLimit string) ([]*domain.Song, error) {
+	// Convert offset and pageLimit to integers
+	pageNumberInt, err := strconv.ParseInt(pageNumber, 10, 64)
 	if err != nil {
 		return nil, err
 	}
-	pageInt, err := strconv.ParseInt(page, 10, 64)
+	pageLimitInt, err := strconv.ParseInt(pageLimit, 10, 64)
 	if err != nil {
 		return nil, err
 	}
-	// Calculate the new offset based on page and offset
-	newOffSet := offsetInt + (pageInt-1)*config.MAX_PAGE_SIZE
-	return s.redisSearchRepo.SearchSongsByTitlePrefix(context.Background(), titlePrefix, newOffSet, pageInt)
+
+	searchCache, err := s.redisSearchRepo.SearchSongsByTitlePrefix(context.Background(), titlePrefix, pageNumberInt, pageLimitInt)
+	if err != nil {
+		return nil, err
+	}
+	if searchCache == nil {
+		// If no results in cache, search in the song repository (database)
+
+		res, err := s.songRepo.GetSongByTitle(titlePrefix)
+		if res != nil {
+			log.Printf("song found from database %#v", res)
+		} else {
+			log.Printf("no song found from database")
+		}
+		if err != nil {
+			return nil, err
+		}
+		for _, song := range res {
+			// Index each song found in the database to Redis for future searches
+			_ = s.redisSearchRepo.IndexSong(context.Background(), song)
+		}
+		return res, nil
+	}
+	return searchCache, nil
 }
 
 func NewSearchEngineUsecase(songRepo_ repository.ISongRepo, redisRepo_ repository.IRedisSearchRepo) ISearchEngineUsecase {
