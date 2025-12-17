@@ -80,8 +80,9 @@ func (u *UploadController) UploadFileToArchive(ctx *gin.Context) {
 	}
 }
 
-func NewUploadController(uploadUsecase_ usecase.IUploadUsecase) IUploadController {
+func NewUploadController(uploadUsecase_ usecase.IUploadUsecase, chunker_ media.IHLSChunker) IUploadController {
 	return &UploadController{
 		uploadUsecase: uploadUsecase_,
+		chunker:       chunker_,
 	}
 }
