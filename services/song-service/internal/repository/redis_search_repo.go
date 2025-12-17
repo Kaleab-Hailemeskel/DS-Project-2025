@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
+	"song-service/api/config"
 	"song-service/api/internal/domain"
 	"strings"
 	"time"
@@ -91,8 +93,8 @@ func (r *RedisRepository) IndexSong(ctx context.Context, song *domain.Song) erro
 }
 
 // SearchSongsByTitlePrefix implements IRedisSearchRepo.
-func (r *RedisRepository) SearchSongsByTitlePrefix(ctx context.Context, titlePrefix string, offset int64, limit int64) ([]*domain.Song, error) {
-	if titlePrefix == "" || limit <= 0 {
+func (r *RedisRepository) SearchSongsByTitlePrefix(ctx context.Context, titlePrefix string, pageNumber int64, pageLimit int64) ([]*domain.Song, error) {
+	if titlePrefix == "" || pageLimit <= 0 {
 		return nil, nil
 	}
 
@@ -101,19 +103,27 @@ func (r *RedisRepository) SearchSongsByTitlePrefix(ctx context.Context, titlePre
 	// Define the titlePrefix range for the sorted set
 	start := fmt.Sprintf("[%s", strings.ToLower(titlePrefix))
 	end := fmt.Sprintf("[%s\xff", strings.ToLower(titlePrefix))
+	fmt.Printf("Start :%s\n End: \n", start)
+	
+	// Calculate the new offset based on pageLimit and offset
+	offset := (pageNumber - 1) * min(config.MAX_PAGE_SIZE, pageLimit)
+	log.Printf("\nTitle_Prefix: %s\nOffSet: %d\nLimit: %d\n", titlePrefix, offset, pageLimit)
 
 	// Use ZRANGEBYLEX to find all matching members (tokens + IDs)
 	// The Offset and Count parameters enable pagination.
+	log.Println("------- Executing ZRANGEBYLEX... --------")
 	members, err := r.client.ZRangeByLex(ctx, IndexKey, &redis.ZRangeBy{
 		Min:    start,
 		Max:    end,
 		Offset: offset, // Pagination: Start position
-		Count:  limit,  // Pagination: Number of results
+		Count:  pageLimit,  // Pagination: Number of results
 	}).Result()
 
-	if err != nil && err != redis.Nil {
+	if err != nil {
+		log.Printf("Error occurred during ZRANGEBYLEX with prefix '%s': %v", titlePrefix, err)
 		return nil, fmt.Errorf("failed to execute ZRANGEBYLEX for search: %w", err)
 	}
+
 	if len(members) == 0 {
 		return nil, nil
 	}
@@ -149,6 +159,7 @@ func (r *RedisRepository) SearchSongsByTitlePrefix(ctx context.Context, titlePre
 
 	// 3. --- MAP RESULTS TO STRUCTS ---
 	songs := make([]*domain.Song, 0, len(cmds))
+	uniqueSongIds := make(map[uuid.UUID]struct{}) 
 	for _, cmd := range cmds {
 		result, err := cmd.Result()
 		if err != nil || len(result) == 0 {
@@ -157,7 +168,10 @@ func (r *RedisRepository) SearchSongsByTitlePrefix(ctx context.Context, titlePre
 
 		// Map the Hash result back to the domain.Song struct
 		id, _ := uuid.Parse(result["id"])
-
+		if _, exists := uniqueSongIds[id]; exists {
+			continue // Skip duplicate entries
+		}
+		uniqueSongIds[id] = struct{}{}
 		songs = append(songs, &domain.Song{
 			ID:       id,
 			Title:    result["title"],
@@ -167,7 +181,7 @@ func (r *RedisRepository) SearchSongsByTitlePrefix(ctx context.Context, titlePre
 			ImageURL: result["image_url"],
 		})
 	}
-
+	
 	return songs, nil
 }
 
