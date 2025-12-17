@@ -28,7 +28,7 @@ type ISongRepo interface {
 type IRedisSearchRepo interface {
 	IndexSong(ctx context.Context, song *domain.Song) error
 	DeindexSong(ctx context.Context, song *domain.Song) error
-	SearchSongsByTitlePrefix(ctx context.Context, titlePrefix string, offset, limit int64) ([]*domain.Song, error)
+	SearchSongsByTitlePrefix(ctx context.Context, titlePrefix string, pageNumber, pageLimit int64) ([]*domain.Song, error)
 	//* they aren't implemented yet
 	/*
 		SearchSongsByArtist(ctx context.Context, artist string) ([]*domain.Song, error)
@@ -48,8 +48,14 @@ func InitRedisClient() *redis.Client {
 func InitPostgresDB() *gorm.DB {
 	// Implementation for initializing PostgreSQL DB connection
 	log.Println("initializing Postgres DB connection...")
-	
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
+	log.Println("POSTGRES_HOST:", config.POSTGRES_HOST)
+	log.Println("POSTGRES_PORT:", config.POSTGRES_PORT)
+	log.Println("POSTGRES_USER:", config.POSTGRES_USER)
+	log.Println("POSTGRES_DB:", config.POSTGRES_DB)
+	log.Println("POSTGRES_PASSWORD:", config.POSTGRES_PASSWORD)
+
+	// Wrap %s in single quotes to handle spaces/special characters
+	dsn := fmt.Sprintf("host='%s' user='%s' password='%s' dbname='%s' port='%s' sslmode=disable TimeZone=UTC",
 		config.POSTGRES_HOST,
 		config.POSTGRES_USER,
 		config.POSTGRES_PASSWORD,
