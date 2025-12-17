@@ -5,6 +5,7 @@ import (
 	"song-service/api/internal/delivery/http"
 	"song-service/api/internal/repository"
 	"song-service/api/internal/usecase"
+	"song-service/api/pkg/media"
 )
 
 func main() {
@@ -15,7 +16,8 @@ func main() {
 	songRepo := repository.NewSongRepository(postresDb)
 	redisSearchRepo := repository.NewRedisRepository(redisDb)
 	songUsecase := usecase.NewUploadUsecase(songRepo)
-	songController := http.NewUploadController(songUsecase)
+	chunkerUseCase := media.NewHLSSegmenter()
+	songController := http.NewUploadController(songUsecase, chunkerUseCase)
 	searchUsecase := usecase.NewSearchEngineUsecase(songRepo, redisSearchRepo)
 	searchController := http.NewSearchController(searchUsecase)
 
