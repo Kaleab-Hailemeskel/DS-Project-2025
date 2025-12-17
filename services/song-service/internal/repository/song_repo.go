@@ -3,7 +3,9 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"log"
 	"song-service/api/internal/domain"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,17 +22,15 @@ type SongRepository struct {
 	db *gorm.DB
 }
 
-// NewSongRepository creates a new repository for the given GORM DB instance.
 func NewSongRepository(db *gorm.DB) ISongRepo {
-	// AutoMigrate is called here to ensure the table structure is correct.
-	// In a real application, this might be handled by migration tools.
-	err := db.AutoMigrate(&domain.Song{})
-	if err != nil {
-		// Panic is acceptable here as the application cannot run without a working DB schema.
-		panic("Failed to auto-migrate Song table: " + err.Error())
-	}
+    err := db.AutoMigrate(&domain.Song{})
+    
+    // If the error is "already exists", we don't care, so we don't panic.
+    if err != nil && !strings.Contains(err.Error(), "already exists") {
+        panic("Database error: " + err.Error())
+    }
 
-	return &SongRepository{db: db}
+    return &SongRepository{db: db}
 }
 
 // GetSong retrieves a single song by its UUID.
@@ -52,6 +52,10 @@ func (r *SongRepository) GetSong(id uuid.UUID) (*domain.Song, error) {
 // SaveSong creates a new Song record in the database.
 func (r *SongRepository) SaveSong(song *domain.Song) (*domain.Song, error) {
 	// Ensure ID and CreatedAt are set if they are zero values (a common practice).
+	log.Println("------------------------------")
+	log.Printf("Song to be stored, %#v", song)
+	log.Println("------------------------------")
+
 	if song.ID == uuid.Nil {
 		song.ID = uuid.New()
 	}
