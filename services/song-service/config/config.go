@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -49,8 +50,8 @@ func InitEnv() {
 	REDIS_PASSWORD = getEnv("REDIS_PASSWORD")
 	REDIS_DB, _ = strconv.Atoi(getEnv("REDIS_DB"))
 	// print loaded config for verification
-	log.Printf("Config loaded: \nSONG_ARCHIVE_DIR=%s\n SERVER_PORT=%s\n POSTGRES_HOST=%s\n POSTGRES_PORT=%s\n POSTGRES_USER=%s\n POSTGRES_DB=%s\n SEGMENT_DURATION=%d\n MAX_PAGE_SIZE=%d\n REDIS_ADDR=%s\n REDIS_DB=%d",
-		SONG_ARCHIVE_DIR, SERVER_PORT, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_DB, SEGMENT_DURATION, MAX_PAGE_SIZE, REDIS_ADDR, REDIS_DB)
+	log.Printf("Config loaded: \nSONG_ARCHIVE_DIR=%s\n SERVER_PORT=%s\n POSTGRES_HOST=%s\n POSTGRES_PORT=%s\n POSTGRES_USER=%s\n POSTGRES_DB=%s\n SEGMENT_DURATION=%d\n MAX_PAGE_SIZE=%d\n REDIS_ADDR=%s\n REDIS_DB=%d\nPOSTGRES_PASSWORD=%s\n",
+		SONG_ARCHIVE_DIR, SERVER_PORT, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_DB, SEGMENT_DURATION, MAX_PAGE_SIZE, REDIS_ADDR, REDIS_DB, POSTGRES_PASSWORD)
 }
 
 func getEnv(key string) string {
@@ -58,5 +59,6 @@ func getEnv(key string) string {
 	if val == "" {
 		log.Fatalf("Environment variable %s is not set", key)
 	}
-	return val
+	return strings.TrimSpace(val)
+	
 }
