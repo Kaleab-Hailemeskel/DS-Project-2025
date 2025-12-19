@@ -10,6 +10,7 @@ services:
     environment:
       - SERVICE_PORT=8080
       - POSTGRES_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
+      - JWT_SECRET=dev-secret-change-me  # DEV ONLY - must replace in prod or use Docker secrets
       - REDIS_URL=redis://redis:6379
       - KAFKA_BROKERS=kafka:9092
     depends_on:
