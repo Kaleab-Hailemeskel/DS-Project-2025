@@ -23,22 +23,7 @@ services:
     networks:
       - app-network
 
-  playlist-service:
-    build: ../services/playlist-service
-    container_name: playlist-service
-    ports:
-      - "8002:8080"
-    environment:
-      - SERVICE_PORT=8080
-      - POSTGRES_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
-      - KAFKA_BROKERS=kafka:9092
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-    networks:
-      - app-network
+ 
 
   song-service:
     build: ../services/song-service
@@ -57,22 +42,7 @@ services:
     networks:
       - app-network
 
-  adaptive-engine:
-    build: ../services/adaptive-engine
-    container_name: adaptive-engine
-    ports:
-      - "8004:8080"
-    environment:
-      - SERVICE_PORT=8080
-      - REDIS_URL=redis://redis:6379
-      - KAFKA_BROKERS=kafka:9092
-    depends_on:
-      redis:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-    networks:
-      - app-network
+
 
   streaming-service:
     build: ../services/streaming-service
