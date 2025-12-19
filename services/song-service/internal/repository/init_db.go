@@ -16,7 +16,7 @@ import (
 type ISongRepo interface {
 	GetSong(id uuid.UUID) (*domain.Song, error)
 	SaveSong(song *domain.Song) (*domain.Song, error)
-	GetAllSongs(mulicListPerPage, pageNumber int) ([]*domain.Song, error)
+	GetAllSongs(musicListPerPage, pageNumber int) ([]*domain.Song, error)
 	GetSongByArtist(artist string) ([]*domain.Song, error)
 	GetSongByTitle(title string) ([]*domain.Song, error)
 	GetSongByAlbum(album string) ([]*domain.Song, error)

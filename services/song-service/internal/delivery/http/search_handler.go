@@ -14,7 +14,7 @@ type SearchController struct {
 
 // SearchSongs implements ISearchController.
 func (s *SearchController) SearchSongs(ctx *gin.Context) {
-	titlePrefix := ctx.Query("title_prefix")
+	titlePrefix := ctx.Query("title-prefix")
 	offset := ctx.DefaultQuery("page-limit", fmt.Sprint(config.MAX_PAGE_SIZE))
 	page := ctx.DefaultQuery("page-number", "1")
 
