@@ -1,13 +1,13 @@
 package main
 
 import (
-	"streaming-service/internal/usecase"
 	"streaming-service/config"
 	"streaming-service/internal/delivery/http"
+	"streaming-service/internal/usecase"
 )
 
 func main() {
-	
+	config.InitEnv()
 	// Initialize usecase and controller
 	songUsecase := usecase.NewStreamUsecase(config.SONG_ARCHIVE_DIR)
 	songController := http.NewStreamController(songUsecase)
