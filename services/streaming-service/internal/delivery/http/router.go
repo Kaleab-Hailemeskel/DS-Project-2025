@@ -7,7 +7,7 @@ import (
 func RegisterStreamRoutes(router *gin.Engine, streamController IStreamController) {
 	streamGroup := router.Group("/streams")
 	{
-		streamGroup.GET("/get-manifest/:filename", streamController.GetManifestFile)
+		streamGroup.GET("/:filename/index.m3u8", streamController.GetManifestFile)
 		streamGroup.GET("/:filename/:segment", streamController.GetStreamFile)
 	}
 }
