@@ -1,0 +1,98 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "API for streaming HLS content (manifests and segments)",
+        "title": "Streaming Service API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/streams/get-manifest/{filename}": {
+            "get": {
+                "description": "Returns the HLS manifest (index.m3u8) for a given song ID.",
+                "produces": [
+                    "application/vnd.apple.mpegurl"
+                ],
+                "tags": [
+                    "streaming"
+                ],
+                "summary": "Get HLS manifest",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Song ID",
+                        "name": "filename",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "m3u8 contents",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/streams/{filename}/{segment}": {
+            "get": {
+                "description": "Returns a specific HLS segment (.ts) for a song.",
+                "produces": [
+                    "video/mp2t"
+                ],
+                "tags": [
+                    "streaming"
+                ],
+                "summary": "Get HLS segment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Song ID",
+                        "name": "filename",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Segment filename",
+                        "name": "segment",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "binary segment",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
