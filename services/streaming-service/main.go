@@ -1,14 +1,18 @@
 package main
 
+//! IGNORE - use the main.go file found in cmd/api/main.go
+/*
 import (
 	"fmt"
 	"net/http"
+	"song-service/api/config"
 )
 
 func main() {
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "streaming service is running!")
+		fmt.Fprintln(w, "Streaming service is running!")
 	})
-	fmt.Println("Song service running on port 8080")
-	http.ListenAndServe(":8080", nil)
+	fmt.Printf("Streaming service running on port %s \n", config.PORT)
+	http.ListenAndServe(fmt.Sprintf(":%s", config.PORT), nil) // Use the port from config
 }
+*/
