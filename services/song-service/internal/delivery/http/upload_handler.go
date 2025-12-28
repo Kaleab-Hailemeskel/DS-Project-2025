@@ -34,6 +34,17 @@ func sanitizeFilename(s string) string {
 }
 
 // UploadFileToArchive implements IUploadController.
+// @Summary Upload song and generate HLS segments
+// @Description Accepts multipart form with audio file (`musicFile`) and JSON metadata (`metadata`), saves to archive, and generates HLS segments.
+// @Tags upload
+// @Accept mpfd
+// @Produce json
+// @Param musicFile formData file true "Audio file"
+// @Param metadata formData string true "Song metadata as JSON"
+// @Success 200 {object} map[string]string "success"
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /upload/song [post]
 func (u *UploadController) UploadFileToArchive(ctx *gin.Context) {
 	// 1. **Get the uploaded file**
 	file, err := ctx.FormFile("musicFile") // Key from the client must be "musicFile"

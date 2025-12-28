@@ -1,0 +1,86 @@
+basePath: /
+info:
+  contact: {}
+  description: API for uploading songs, segmenting to HLS, and searching metadata.
+  title: Song Service API
+  version: "1.0"
+paths:
+  /search/songs:
+    get:
+      description: Returns paginated songs filtered by title prefix.
+      parameters:
+      - description: Title prefix filter
+        in: query
+        name: title_prefix
+        type: string
+      - default: 10
+        description: Page size
+        in: query
+        name: page-limit
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page-number
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Search songs by title prefix
+      tags:
+      - search
+  /upload/song:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Accepts multipart form with audio file (`musicFile`) and JSON metadata
+        (`metadata`), saves to archive, and generates HLS segments.
+      parameters:
+      - description: Audio file
+        in: formData
+        name: musicFile
+        required: true
+        type: file
+      - description: Song metadata as JSON
+        in: formData
+        name: metadata
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Upload song and generate HLS segments
+      tags:
+      - upload
+schemes:
+- http
+swagger: "2.0"

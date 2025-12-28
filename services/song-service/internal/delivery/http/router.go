@@ -1,6 +1,8 @@
 package http
 
 import (
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,5 +26,7 @@ func InitRouter(uploadController IUploadController, searchController ISearchCont
 	RegisterUploadRoutes(router, uploadController)	
 	// Register search routes
 	RegisterSearchRoutes(router, searchController)
+	// Swagger UI
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router
 }

@@ -13,6 +13,16 @@ type SearchController struct {
 }
 
 // SearchSongs implements ISearchController.
+// @Summary Search songs by title prefix
+// @Description Returns paginated songs filtered by title prefix.
+// @Tags search
+// @Produce json
+// @Param title_prefix query string false "Title prefix filter"
+// @Param page-limit query int false "Page size" default(10)
+// @Param page-number query int false "Page number" default(1)
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]string
+// @Router /search/songs [get]
 func (s *SearchController) SearchSongs(ctx *gin.Context) {
 	titlePrefix := ctx.Query("title_prefix")
 	offset := ctx.DefaultQuery("page-limit", fmt.Sprint(config.MAX_PAGE_SIZE))
