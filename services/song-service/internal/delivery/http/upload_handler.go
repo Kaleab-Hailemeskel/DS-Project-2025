@@ -69,7 +69,10 @@ func (u *UploadController) UploadFileToArchive(ctx *gin.Context) {
 	// 5. **Save the file to the server's local folder**
 	// This uses Gin's convenience function to save the file handle.
 	if err := ctx.SaveUploadedFile(file, saveDir); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file: " + err.Error()})
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to save file: " + err.Error()},
+		)
 		return
 	}
 	//? chunk the music and save it to the existing folder and uncomment a code found in the implementation to delete the original song file
