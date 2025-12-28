@@ -1,0 +1,65 @@
+basePath: /
+info:
+  contact: {}
+  description: API for streaming HLS content (manifests and segments)
+  title: Streaming Service API
+  version: "1.0"
+paths:
+  /streams/{filename}/{segment}:
+    get:
+      description: Returns a specific HLS segment (.ts) for a song.
+      parameters:
+      - description: Song ID
+        in: path
+        name: filename
+        required: true
+        type: string
+      - description: Segment filename
+        in: path
+        name: segment
+        required: true
+        type: string
+      produces:
+      - video/mp2t
+      responses:
+        "200":
+          description: binary segment
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get HLS segment
+      tags:
+      - streaming
+  /streams/get-manifest/{filename}:
+    get:
+      description: Returns the HLS manifest (index.m3u8) for a given song ID.
+      parameters:
+      - description: Song ID
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - application/vnd.apple.mpegurl
+      responses:
+        "200":
+          description: m3u8 contents
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get HLS manifest
+      tags:
+      - streaming
+schemes:
+- http
+swagger: "2.0"
