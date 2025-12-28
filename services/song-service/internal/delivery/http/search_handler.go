@@ -2,8 +2,11 @@ package http
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"song-service/api/config"
 	"song-service/api/internal/usecase"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,9 +18,17 @@ type SearchController struct {
 // SearchSongs implements ISearchController.
 func (s *SearchController) SearchSongs(ctx *gin.Context) {
 	titlePrefix := ctx.Query("title-prefix")
+	titlePrefix = strings.TrimSpace(titlePrefix)
 	offset := ctx.DefaultQuery("page-limit", fmt.Sprint(config.MAX_PAGE_SIZE))
 	page := ctx.DefaultQuery("page-number", "1")
-
+	if titlePrefix == "" {
+		ctx.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": "Missing required query parameter: title-prefix"},
+		)
+		return
+	}
+	log.Println("✅ TitlePrefix =>", titlePrefix)
 	// Call the usecase to search songs
 	songs, err := s.searchUsecase.SearchSongsByTitlePrefix(titlePrefix, offset, page)
 	if err != nil {
