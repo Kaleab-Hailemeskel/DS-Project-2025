@@ -44,10 +44,20 @@ func (s *SearchEngineUsecase) SearchSongsByTitlePrefix(titlePrefix, pageNumber, 
 	if err != nil {
 		return nil, err
 	}
+	log.Println("✅ Result From Redis: ")
+	log.Println("------------------------------")
+	log.Printf("Songs found from redis cache: %#v\n", searchCache)
+	log.Printf("Error: %v\n", err)
+	log.Println("------------------------------")
 	if searchCache == nil {
 		// If no results in cache, search in the song repository (database)
 
 		res, err := s.songRepo.GetSongByTitle(titlePrefix)
+		log.Println("✅ Result From Database: ")
+		log.Println("------------------------------")
+		log.Printf("Songs From Postgres: %#v\n", res)
+		log.Printf("Error: %v\n", err)
+		log.Println("------------------------------")
 		if res != nil {
 			log.Printf("song found from database %#v", res)
 		} else {
