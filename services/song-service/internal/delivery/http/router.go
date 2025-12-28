@@ -5,16 +5,10 @@ import (
 )
 
 func RegisterUploadRoutes(router *gin.Engine, uploadController IUploadController) {
-	uploadGroup := router.Group("/upload")
-	{
-		uploadGroup.POST("/song", uploadController.UploadFileToArchive)
-	}
+	router.POST("/upload", uploadController.UploadFileToArchive)
 }
 func RegisterSearchRoutes(router *gin.Engine, searchController ISearchController) {
-	searchGroup := router.Group("/search")
-	{
-		searchGroup.GET("/songs", searchController.SearchSongs)
-	}
+	router.GET("/search", searchController.SearchSongs)
 }	
 
 func InitRouter(uploadController IUploadController, searchController ISearchController) *gin.Engine {
