@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gin-streaming-service
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gin-streaming-app
+  template:
+    metadata:
+      labels:
+        app: gin-streaming-app
+    spec:
+      containers:
+        - name: streaming-container
+          image: meta/gin-streaming:latest
+          ports:
+            - containerPort: 8080
+          env:
+            # Port for the streaming server
+            - name: SERVER_PORT
+              value: "8080"
+            # The path where the songs are stored
+            - name: SONG_ARCHIVE_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: song-archive-config
+                  key: SONG_ARCHIVE_DIR
+          volumeMounts:
+            - name: storage-volume
+              mountPath: /app/song_archive # Must match SONG_ARCHIVE_DIR value
+      volumes:
+        - name: storage-volume
+          persistentVolumeClaim:
+            claimName: audio-shared-pvc # Mounting the same PVC as the upload service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gin-streaming-service
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: gin-streaming-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

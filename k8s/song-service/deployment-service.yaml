@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gin-song-app
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gin-song-app
+  template:
+    metadata:
+      labels:
+        app: gin-song-app
+    spec:
+      containers:
+        - name: gin-container
+          image: meta/gin-app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: gin-app-config
+          env:
+            # Volume path variable
+            - name: SONG_ARCHIVE_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: song-archive-config
+                  key: SONG_ARCHIVE_DIR
+            - name: SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: gin-app-config
+                  key: SERVER_PORT
+            # Postgres Credentials
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pg-user-password
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pg-user-password
+                  key: password
+            # Redis Secret
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-app-secrets
+                  key: REDIS_PASSWORD
+          volumeMounts:
+            - name: storage-volume
+              mountPath: /app/song_archive
+      volumes:
+        - name: storage-volume
+          persistentVolumeClaim:
+            claimName: audio-shared-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gin-app-service
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: gin-song-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

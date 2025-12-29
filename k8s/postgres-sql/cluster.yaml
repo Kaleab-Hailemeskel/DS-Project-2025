@@ -1,0 +1,28 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg-production
+  namespace: default
+spec:
+  # This creates 1 Primary and 1 Replicas
+  instances: 2
+
+  # Strategy for updating (it will update replicas first, then switchover)
+  primaryUpdateStrategy: unsupervised
+
+  # Storage configuration
+  storage:
+    size: 10Gi
+    # storageClass: "standard" # Uncomment and change if your provider needs a specific class
+
+  # Default database and user configuration
+  bootstrap:
+    initdb:
+      database: app_db
+      owner: app_user
+      secret:
+        name: pg-user-password
+
+  # Monitoring (optional, but good for later)
+  monitoring:
+    enablePodMonitor: true

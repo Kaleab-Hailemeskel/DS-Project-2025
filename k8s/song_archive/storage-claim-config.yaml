@@ -1,0 +1,24 @@
+# storage-claim.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: audio-shared-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+# shared-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: song-archive-config
+  namespace: default
+data:
+  # The central variable both services will use
+  SONG_ARCHIVE_DIR: "/app/song_archive"

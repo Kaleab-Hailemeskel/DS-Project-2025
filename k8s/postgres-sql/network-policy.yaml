@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-only-song-service-to-pg
+  namespace: default
+spec:
+  # 1. Select the Postgres pods
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: pg-production
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    # 2. Allow only the gin-song-app
+    - podSelector:
+        matchLabels:
+          app: gin-song-app
+    ports:
+    - protocol: TCP
+      port: 5432
