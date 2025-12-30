@@ -4,6 +4,7 @@ services:
   song-service:
     build: ../services/song-service
     container_name: song-service
+    image: meta/song-service:v1.0
     # since the nginx will be routing to port 8080 internally, no need to expose ports here
     # ports:
     #   - "8003:8080"
@@ -58,6 +59,7 @@ services:
   # ====================== STREAMING SERVICES ======================
   streaming-service:
     build: ../services/streaming-service
+    image: meta/streaming-service:v1.0
     container_name: streaming-service
     # since the nginx will be routing to port 8080 internally, no need to expose ports here
     # ports:
