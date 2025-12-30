@@ -1,19 +1,21 @@
 package http
 
 import (
+	"streaming-service/internal/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterStreamRoutes(router *gin.Engine, streamController IStreamController) {
-	streamGroup := router.Group("/streams")
-	{
-		streamGroup.GET("/:filename/index.m3u8", streamController.GetManifestFile)
-		streamGroup.GET("/:filename/:segment", streamController.GetStreamFile)
-	}
+func RegisterStreamRoutes(router *gin.RouterGroup, streamController IStreamController) {
+
+	router.GET("/:filename/index.m3u8", streamController.GetManifestFile)
+	router.GET("/:filename/:segment", streamController.GetStreamFile)
+
 }
 
-func InitRouter(streamController IStreamController) *gin.Engine {
+func InitRouter(streamController IStreamController, middleware middleware.IMiddleware) *gin.Engine {
 	router := gin.Default()
-	RegisterStreamRoutes(router, streamController)
+	streamGroup := router.Group("/streams", middleware.AuthUser)
+	RegisterStreamRoutes(streamGroup, streamController)
 	return router
 }
