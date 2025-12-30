@@ -23,14 +23,14 @@ type SongRepository struct {
 }
 
 func NewSongRepository(db *gorm.DB) ISongRepo {
-    err := db.AutoMigrate(&domain.Song{})
-    
-    // If the error is "already exists", we don't care, so we don't panic.
-    if err != nil && !strings.Contains(err.Error(), "already exists") {
-        panic("Database error: " + err.Error())
-    }
+	err := db.AutoMigrate(&domain.Song{})
 
-    return &SongRepository{db: db}
+	// If the error is "already exists", we don't care, so we don't panic.
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		panic("Database error: " + err.Error())
+	}
+
+	return &SongRepository{db: db}
 }
 
 // GetSong retrieves a single song by its UUID.
@@ -141,6 +141,49 @@ func (r *SongRepository) GetSongByGenre(genre string) ([]*domain.Song, error) {
 	}
 
 	return songs, nil
+}
+
+// ! Don't use it if the searching becomes too slow
+func (r *SongRepository) SearchSongs(searchString string) ([]*domain.Song, error) {
+	var songs []*domain.Song
+
+	pattern := "%" + searchString + "%"
+
+	// Using a single Where with ORs inside is often safer/clearer
+
+	result := r.db.Where("title ILIKE ?", pattern).
+		Or("album ILIKE ?", pattern).
+		Or("genre ILIKE ?", pattern).
+		Or("artist ILIKE ?", pattern).
+		Find(&songs)
+
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to search songs: %w", result.Error)
+	}
+
+	return songs, nil
+}
+
+func (r *SongRepository) GetOneSongExact(title, album, artist, genre string) (*domain.Song, error) {
+	var song domain.Song
+
+	// Passing a map to Where creates an "AND" query:
+	// WHERE title = ? AND album = ? AND artist = ? AND genre = ?
+	result := r.db.Where(map[string]interface{}{
+		"title":  title,
+		"album":  album,
+		"artist": artist,
+		"genre":  genre,
+	}).Take(&song)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("database error: %w", result.Error)
+	}
+
+	return &song, nil
 }
 
 // UpdateSong updates an existing Song record.
