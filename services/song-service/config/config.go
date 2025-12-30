@@ -22,6 +22,8 @@ var (
 	REDIS_ADDR        string
 	REDIS_PASSWORD    string
 	REDIS_DB          int
+	USER_SERVICE_URL  string
+	USER_SERVICE_PORT string
 )
 
 func InitEnv() {
@@ -52,7 +54,11 @@ func InitEnv() {
 	// print loaded config for verification
 	log.Printf("Config loaded: \nSONG_ARCHIVE_DIR=%s\n SERVER_PORT=%s\n POSTGRES_HOST=%s\n POSTGRES_PORT=%s\n POSTGRES_USER=%s\n POSTGRES_DB=%s\n SEGMENT_DURATION=%d\n MAX_PAGE_SIZE=%d\n REDIS_ADDR=%s\n REDIS_DB=%d\nPOSTGRES_PASSWORD=%s\n",
 		SONG_ARCHIVE_DIR, SERVER_PORT, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_DB, SEGMENT_DURATION, MAX_PAGE_SIZE, REDIS_ADDR, REDIS_DB, POSTGRES_PASSWORD)
-}
+
+	USER_SERVICE_URL = getEnv("USER_SERVICE_URL")
+	USER_SERVICE_PORT = getEnv("USER_SERVICE_PORT")
+
+	}
 
 func getEnv(key string) string {
 	val := os.Getenv(key)
@@ -60,5 +66,5 @@ func getEnv(key string) string {
 		log.Fatalf("Environment variable %s is not set", key)
 	}
 	return strings.TrimSpace(val)
-	
+
 }
