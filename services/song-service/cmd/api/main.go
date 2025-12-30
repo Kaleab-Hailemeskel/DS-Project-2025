@@ -6,6 +6,7 @@ import (
 	"song-service/api/internal/repository"
 	"song-service/api/internal/usecase"
 	"song-service/api/pkg/media"
+	"song-service/api/internal/middleware"
 )
 
 func main() {
@@ -15,13 +16,11 @@ func main() {
 	redisDb := repository.InitRedisClient()
 	songRepo := repository.NewSongRepository(postresDb)
 	redisSearchRepo := repository.NewRedisRepository(redisDb)
-	songUsecase := usecase.NewUploadUsecase(songRepo)
-	chunkerUseCase := media.NewHLSSegmenter()
-	songController := http.NewUploadController(songUsecase, chunkerUseCase)
-	searchUsecase := usecase.NewSearchEngineUsecase(songRepo, redisSearchRepo)
-	searchController := http.NewSearchController(searchUsecase)
-
+	songUsecase := usecase.NewSongUsecase(songRepo, redisSearchRepo)
+	mediaProcessor := media.NewMediaProcessor()
+	songController := http.NewController(songUsecase, mediaProcessor)
+	middleware_ := middleware.NewMiddleware(redisSearchRepo)
 	// Further setup like starting the server would go here
-	songServer := http.InitRouter(songController, searchController)
+	songServer := http.InitRouter(songController, middleware_)
 	songServer.Run(":" + config.SERVER_PORT) // Start the server
 }
