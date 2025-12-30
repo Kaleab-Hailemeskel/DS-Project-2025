@@ -6,6 +6,7 @@ import (
 	"log"
 	"song-service/api/config"
 	"song-service/api/internal/domain"
+	"time"
 
 	"github.com/google/uuid"
 	redis "github.com/redis/go-redis/v9"
@@ -16,6 +17,8 @@ import (
 type ISongRepo interface {
 	GetSong(id uuid.UUID) (*domain.Song, error)
 	SaveSong(song *domain.Song) (*domain.Song, error)
+	SearchSongs(searchString string) ([]*domain.Song, error)
+	GetOneSongExact(title, album, artist, genre string) (*domain.Song, error)
 	GetAllSongs(musicListPerPage, pageNumber int) ([]*domain.Song, error)
 	GetSongByArtist(artist string) ([]*domain.Song, error)
 	GetSongByTitle(title string) ([]*domain.Song, error)
@@ -28,8 +31,10 @@ type ISongRepo interface {
 type IRedisSearchRepo interface {
 	IndexSong(ctx context.Context, song *domain.Song) error
 	DeindexSong(ctx context.Context, song *domain.Song) error
-	SearchSongsByTitlePrefix(ctx context.Context, titlePrefix string, pageNumber, pageLimit int64) ([]*domain.Song, error)
-	//* they aren't implemented yet
+	SearchSongsByPrefix(ctx context.Context, titlePrefix string, pageNumber, pageLimit int64) ([]*domain.Song, error)
+	IsTokenValid(ctx context.Context, token string) (bool, error)
+	MarkTokenAsValid(ctx context.Context, token string, ttl time.Duration) error
+	//* they aren't implemented yet, BUT they are logically inside the SearchSongsByPrefix func
 	/*
 		SearchSongsByArtist(ctx context.Context, artist string) ([]*domain.Song, error)
 		SearchSongsByAlbum(ctx context.Context, album string) ([]*domain.Song, error)
@@ -40,8 +45,8 @@ type IRedisSearchRepo interface {
 func InitRedisClient() *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     config.REDIS_ADDR,
-		Password: config.REDIS_PASSWORD, // no password set
-		DB:       config.REDIS_DB,       // use default DB
+		Password: config.REDIS_PASSWORD,
+		DB:       config.REDIS_DB,
 	})
 	return rdb
 }
