@@ -7,5 +7,5 @@ CREATE TABLE IF NOT EXISTS songs (
     release_year INTEGER,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     genre VARCHAR(100),
-    image_url TEXT
+    cover_art_blob BYTEA
 );
