@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
 	"song-service/api/config"
 	"song-service/api/internal/domain"
 	"strings"
@@ -99,7 +100,7 @@ func (r *RedisRepository) SearchSongsByPrefix(ctx context.Context, titlePrefix s
 	start := fmt.Sprintf("[%s", strings.ToLower(titlePrefix))
 	end := fmt.Sprintf("[%s\xff", strings.ToLower(titlePrefix))
 	offset := (pageNumber - 1) * min(config.MAX_PAGE_SIZE, pageLimit)
-
+	log.Printf("➡️ PageNumber:  %v, PageLimit:  %v, Offset: %v", pageNumber, pageLimit, offset)
 	members, err := r.client.ZRangeByLex(ctx, IndexKey, &redis.ZRangeBy{
 		Min:    start,
 		Max:    end,

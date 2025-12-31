@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"streaming-service/config"
 	"streaming-service/internal/domain"
@@ -22,6 +23,7 @@ type Middleware struct {
 func (m *Middleware) AuthUser(ctx *gin.Context) {
 	// 1. Extract Token
 	authHeader := ctx.GetHeader("Authorization")
+	log.Printf("✅ AuthHeader: %s", authHeader)
 	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: No token provided"})
 		return
@@ -53,7 +55,7 @@ func (m *Middleware) AuthUser(ctx *gin.Context) {
 
 	var result domain.AuthResponse
 	json.NewDecoder(resp.Body).Decode(&result)
-
+	log.Printf("✅ AuthResponse: %+v", result)
 	// 4. Check Business Logic Result
 	if !result.Valid || !result.Data.Linked {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
