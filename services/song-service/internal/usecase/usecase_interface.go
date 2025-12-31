@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"song-service/api/internal/domain"
+
+	"github.com/google/uuid"
 )
 
 type IUploadUsecase interface {
@@ -24,4 +26,5 @@ type ISongUsecase interface { // inheriting both interfaces
 	IUploadUsecase
 	ISearchEngineUsecase
 	GetAllSong(pageNumber, pageLimit string) ([]*domain.Song, error)
+	SaveBlobImage(id uuid.UUID, blob []byte) error
 }

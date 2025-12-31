@@ -17,7 +17,7 @@ import (
 type ISongRepo interface {
 	GetSong(id uuid.UUID) (*domain.Song, error)
 	SaveSong(song *domain.Song) (*domain.Song, error)
-	SearchSongs(searchString string) ([]*domain.Song, error)
+	SearchSongs(searchString string, pageLimit, pageNumber int) ([]*domain.Song, error)
 	GetOneSongExact(title, album, artist, genre string) (*domain.Song, error)
 	GetAllSongs(musicListPerPage, pageNumber int) ([]*domain.Song, error)
 	GetSongByArtist(artist string) ([]*domain.Song, error)
@@ -25,6 +25,7 @@ type ISongRepo interface {
 	GetSongByAlbum(album string) ([]*domain.Song, error)
 	GetSongByGenre(genre string) ([]*domain.Song, error)
 	UpdateSong(song *domain.Song) (*domain.Song, error)
+	SaveBlobImage(id uuid.UUID, blob []byte) error
 	DeleteSong(id uuid.UUID) error
 }
 

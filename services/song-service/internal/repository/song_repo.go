@@ -33,6 +33,22 @@ func NewSongRepository(db *gorm.DB) ISongRepo {
 	return &SongRepository{db: db}
 }
 
+// SaveBlobImage implements [ISongRepo].
+func (r *SongRepository) SaveBlobImage(id uuid.UUID, blob []byte) error {
+
+	result := r.db.Model(&domain.Song{}).Where("id = ?", id).Update("cover_art_blob", blob)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("no song found with the given ID")
+	}
+
+	return nil
+}
+
 // GetSong retrieves a single song by its UUID.
 func (r *SongRepository) GetSong(id uuid.UUID) (*domain.Song, error) {
 	var song domain.Song
@@ -144,17 +160,24 @@ func (r *SongRepository) GetSongByGenre(genre string) ([]*domain.Song, error) {
 }
 
 // ! Don't use it if the searching becomes too slow
-func (r *SongRepository) SearchSongs(searchString string) ([]*domain.Song, error) {
+func (r *SongRepository) SearchSongs(searchString string, pageLimit, pageNumber int) ([]*domain.Song, error) {
 	var songs []*domain.Song
+
+	// Calculate offset
+	if pageNumber < 1 {
+		pageNumber = 1
+	}
+	offset := (pageNumber - 1) * pageLimit
 
 	pattern := "%" + searchString + "%"
 
-	// Using a single Where with ORs inside is often safer/clearer
-
+	// Apply Limit and Offset to the query
 	result := r.db.Where("title ILIKE ?", pattern).
 		Or("album ILIKE ?", pattern).
 		Or("genre ILIKE ?", pattern).
 		Or("artist ILIKE ?", pattern).
+		Limit(pageLimit).
+		Offset(offset).
 		Find(&songs)
 
 	if result.Error != nil {

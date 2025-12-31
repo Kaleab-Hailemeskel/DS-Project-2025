@@ -8,6 +8,8 @@ import (
 	"song-service/api/internal/domain"
 	"song-service/api/internal/repository"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type SongUsecase struct {
@@ -15,14 +17,24 @@ type SongUsecase struct {
 	redisSearchRepo repository.IRedisSearchRepo
 }
 
+// SaveBlobImage implements [ISongUsecase].
+func (s *SongUsecase) SaveBlobImage(id uuid.UUID, blob []byte) error {
+	if blob == nil {
+		return fmt.Errorf("blob is nil")
+	} else if id == uuid.Nil {
+		return fmt.Errorf("id is nil")
+	}
+	return s.songRepo.SaveBlobImage(id, blob)
+}
+
 // GetAllSong implements [ISongUsecase].
 func (s *SongUsecase) GetAllSong(pageNumber string, pageLimit string) ([]*domain.Song, error) {
 	pageLimitInt := int(config.MAX_PAGE_SIZE)
 	pageNumberInt := 0
-	if value, err := strconv.Atoi(pageLimit); err == nil{
+	if value, err := strconv.Atoi(pageLimit); err == nil {
 		pageLimitInt = value
 	}
-	if value, err := strconv.Atoi(pageNumber); err == nil{
+	if value, err := strconv.Atoi(pageNumber); err == nil {
 		pageNumberInt = value
 	}
 	return s.songRepo.GetAllSongs(pageLimitInt, pageNumberInt)
@@ -67,7 +79,7 @@ func (s *SongUsecase) SearchSongsByPrefix(stringPrefix, pageNumber, pageLimit st
 	if searchCache == nil {
 		// If no results in cache, search in the song repository (database)
 
-		res, err := s.songRepo.SearchSongs(stringPrefix)
+		res, err := s.songRepo.SearchSongs(stringPrefix, int(pageLimitInt), int(pageNumberInt))
 		log.Println("✅ Result From Database: ")
 		log.Println("------------------------------")
 		log.Printf("Songs From Postgres: %#v\n", res)
