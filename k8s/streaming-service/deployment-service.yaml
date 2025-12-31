@@ -1,51 +1,74 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gin-streaming-service
+  name: streaming-api
   namespace: default
+  labels:
+    app.kubernetes.io/name: streaming-api
+    app.kubernetes.io/component: streaming
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: gin-streaming-app
+      app.kubernetes.io/name: streaming-api
   template:
     metadata:
       labels:
-        app: gin-streaming-app
+        app.kubernetes.io/name: streaming-api
     spec:
       containers:
-        - name: streaming-container
+        - name: server
           image: meta/gin-streaming:latest
+          imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8080
+            - name: http
+              containerPort: 8080
           env:
-            # Port for the streaming server
             - name: SERVER_PORT
               value: "8080"
-            # The path where the songs are stored
+            
+            # Uses the shared config created in step 2
             - name: SONG_ARCHIVE_DIR
               valueFrom:
                 configMapKeyRef:
-                  name: song-archive-config
-                  key: SONG_ARCHIVE_DIR
+                  name: song-api-storage-config
+                  key: archive_dir
+            
+            
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-api-config
+                  key: REDIS_HOST
+
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: streaming-redis-creds
+                  key: password
+
           volumeMounts:
-            - name: storage-volume
-              mountPath: /app/song_archive # Must match SONG_ARCHIVE_DIR value
+            - name: media-storage
+              mountPath: /app/media # Must match the value in song-api-storage-config
+      
       volumes:
-        - name: storage-volume
+        - name: media-storage
           persistentVolumeClaim:
-            claimName: audio-shared-pvc # Mounting the same PVC as the upload service
+            # Connects to the exact same PVC as the song-api
+            claimName: song-media-pvc
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: gin-streaming-service
+  name: streaming-api
   namespace: default
 spec:
   type: ClusterIP
   selector:
-    app: gin-streaming-app
+    app.kubernetes.io/name: streaming-api
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 8080

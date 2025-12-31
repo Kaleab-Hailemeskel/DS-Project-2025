@@ -2,7 +2,8 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: audio-shared-pvc
+  # Matches claimName: song-media-pvc
+  name: song-media-pvc
   namespace: default
 spec:
   accessModes:
@@ -17,8 +18,10 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: song-archive-config
+  # Matches configMapKeyRef name: song-api-storage-config
+  name: song-api-storage-config
   namespace: default
 data:
-  # The central variable both services will use
-  SONG_ARCHIVE_DIR: "/app/song_archive"
+  # Matches the mountPath: /app/media
+  # Key matches configMapKeyRef key: archive_dir
+  archive_dir: "/app/media"

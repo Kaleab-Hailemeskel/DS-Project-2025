@@ -1,74 +1,120 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gin-song-app
+  name: song-api
   namespace: default
+  labels:
+    app.kubernetes.io/name: song-api
+    app.kubernetes.io/component: backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: gin-song-app
+      app.kubernetes.io/name: song-api
   template:
     metadata:
       labels:
-        app: gin-song-app
+        app.kubernetes.io/name: song-api
     spec:
       containers:
-        - name: gin-container
-          image: meta/gin-app:latest
+        - name: server
+          image: meta/song-api:latest 
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8080
-          envFrom:
-            - configMapRef:
-                name: gin-app-config
+            - name: http
+              containerPort: 8080
+          
+          # Explicitly listing all variables in 'env' instead of 'envFrom'
           env:
-            # Volume path variable
-            - name: SONG_ARCHIVE_DIR
+            # --- ConfigMap Variables ---
+            - name: SEGMENT_DURATION
               valueFrom:
                 configMapKeyRef:
-                  name: song-archive-config
-                  key: SONG_ARCHIVE_DIR
+                  name: song-api-config
+                  key: SEGMENT_DURATION
+            - name: MAX_PAGE_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: MAX_PAGE_SIZE
             - name: SERVER_PORT
               valueFrom:
                 configMapKeyRef:
-                  name: gin-app-config
+                  name: song-api-config
                   key: SERVER_PORT
-            # Postgres Credentials
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: POSTGRES_PORT
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: POSTGRES_DB
+            - name: REDIS_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: REDIS_ADDR
+            - name: REDIS_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: REDIS_DB
+            
+            # --- Storage Config ---
+            - name: SONG_ARCHIVE_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-storage-config
+                  key: archive_dir
+
+            # --- Secrets ---
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: pg-user-password
+                  name: song-api-postgres-creds
                   key: username
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: pg-user-password
+                  name: song-api-postgres-creds
                   key: password
-            # Redis Secret
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: redis-app-secrets
-                  key: REDIS_PASSWORD
+                  name: song-api-redis-creds
+                  key: password
+            
+          
+
           volumeMounts:
-            - name: storage-volume
-              mountPath: /app/song_archive
+            - name: media-storage
+              mountPath: /app/media
+
       volumes:
-        - name: storage-volume
+        - name: media-storage
           persistentVolumeClaim:
-            claimName: audio-shared-pvc
+            claimName: song-media-pvc
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: gin-app-service
+  name: song-api
   namespace: default
 spec:
   type: ClusterIP
   selector:
-    app: gin-song-app
+    app.kubernetes.io/name: song-api
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 8080

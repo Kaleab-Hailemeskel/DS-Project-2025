@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # Matches the envFrom reference in the first Deployment file
+  name: streaming-api-config
+  namespace: default
+data:
+  SERVER_PORT: "8080"
+
+  REDIS_ADDR: "streaming-redis:6379"
+  REDIS_DB: "0"

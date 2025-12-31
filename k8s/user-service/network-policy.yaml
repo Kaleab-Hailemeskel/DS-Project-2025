@@ -6,7 +6,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: song-api # Traffic target
+      app: user-api # Traffic target
   policyTypes:
     - Ingress
   ingress:
@@ -22,8 +22,8 @@ spec:
             matchLabels:
               app: streaming-api
 
-    # Rule 3: Inter-service communicatoin allowed to user service
+    # Rule 3: Inter-service communicatoin allowed to song service
     - from:
         - podSelector:
             matchLabels:
-              app: user-api
+              app: song-api

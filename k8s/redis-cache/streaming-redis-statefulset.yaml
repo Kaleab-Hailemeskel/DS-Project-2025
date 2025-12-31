@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: streaming-redis
+  namespace: default
+  labels:
+    app.kubernetes.io/name: streaming-redis
+    app.kubernetes.io/component: cache
+spec:
+  # References the Headless Service name (created separately)
+  serviceName: "streaming-redis"
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: streaming-redis
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: streaming-redis
+        app.kubernetes.io/component: cache
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          # Standard redis command with password protection and persistence
+          command: ["redis-server", "--requirepass", "$(REDIS_PASSWORD)", "--appendonly", "yes"]
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  # The new secret specific to the streaming service
+                  name: streaming-redis-creds
+                  # Standard key name established in previous steps
+                  key: password
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+  
+  # Persistent storage for each replica
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

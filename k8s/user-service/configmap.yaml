@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-api-config
+  namespace: default
+data:
+  # Server Settings
+  SERVER_PORT: "8080"
+  
+  # Postgres Connection (Connecting to the 'user-postgres' CNPG cluster)
+  POSTGRES_HOST: "user-postgres-rw"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "user_db"

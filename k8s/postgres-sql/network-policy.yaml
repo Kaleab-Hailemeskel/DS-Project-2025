@@ -1,21 +1,49 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-only-song-service-to-pg
+  name: allow-apps-to-song-postgres
   namespace: default
 spec:
-  # 1. Select the Postgres pods
+  # 1. Select the specific Postgres Cluster Pods
+  # (Matches the CNPG cluster name 'song-postgres' created earlier)
   podSelector:
     matchLabels:
-      cnpg.io/cluster: pg-production
+      cnpg.io/cluster: song-postgres
+
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    # 2. Allow only the gin-song-app
-    - podSelector:
-        matchLabels:
-          app: gin-song-app
-    ports:
-    - protocol: TCP
-      port: 5432
+    - from:
+        # 2. Allow Song API
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: song-api
+
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-apps-to-user-postgres
+  namespace: default
+spec:
+  # 1. Select the specific Postgres Cluster Pods
+  # (Matches the CNPG cluster name 'song-postgres' created earlier)
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: user-postgres
+
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        # 2. Allow User API
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: user-api
+
+      ports:
+        - protocol: TCP
+          port: 5432

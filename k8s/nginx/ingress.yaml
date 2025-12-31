@@ -13,32 +13,33 @@ spec:
     - host: song-app.test
       http:
         paths:
-          # 1. Main Song Service (Root Path)
+
+          # http://song-app.test/song
           - path: /song/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: gin-app-service
+                name: song-api
                 port:
                   number: 80
 
-          # 2. Placeholder for Future Service A (e.g., Auth or Users)
-          # Access this via http://song-app.test/service-a
+          
+          # Access this via http://song-app.test/streaming
           - path: /streaming/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: gin-streaming-service
+                name: streaming-api
                 port:
                   number: 80
+
           
-          #* UNCOMMENT THIS ONE FOR THE USER SERVICE
-          # 3. Placeholder for Future Service B (e.g., Analytics)
-          # Access this via http://song-app.test/service-b
-          # - path: /user/?(.*)
-          #   pathType: Prefix
-          #   backend:
-          #     service:
-          #       name: gin-user-service
-          #       port:
-          #         number: 80
+          
+          # Access this via http://song-app.test/user
+          - path: /user/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: user-api
+                port:
+                  number: 80

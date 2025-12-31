@@ -6,7 +6,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: song-api # Traffic target
+      app: streaming-api # Traffic target
   policyTypes:
     - Ingress
   ingress:
@@ -16,11 +16,11 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: ingress-nginx
 
-    # Rule 2: Inter-service communicatoin allowed to streaming service
+    # Rule 2: Inter-service communicatoin allowed to song service
     - from:
         - podSelector:
             matchLabels:
-              app: streaming-api
+              app: song-api
 
     # Rule 3: Inter-service communicatoin allowed to user service
     - from:
