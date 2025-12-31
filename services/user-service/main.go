@@ -53,6 +53,8 @@ func main() {
 	// protected /me with middleware
 	meHandler := http.HandlerFunc(app.MeHandler)
 	http.Handle("/me", AuthMiddleware(jwtSecret, meHandler))
+	// validation function for song-service | streaming-service
+	http.Handle("/validate", ValidateUser(jwtSecret, nil))
 
 	port := os.Getenv("SERVICE_PORT")
 	if port == "" {
