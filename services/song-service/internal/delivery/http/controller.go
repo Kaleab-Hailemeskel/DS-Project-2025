@@ -90,41 +90,64 @@ func (u *Controller) UploadFileToArchive(ctx *gin.Context) {
 		return
 	}
 
-	albumExtError := make(chan error)
-	segError := make(chan error)
-	blob := make(chan []byte)
+	// Use buffered channels (size 1) to prevent goroutines from hanging
+	albumExtError := make(chan error, 1)
+	segError := make(chan error, 1)
+	blobChan := make(chan []byte, 1)
 
-	//? just a simple goroutine to excute the two funcs parallely
-	//func 1
+	// Goroutine 1: Album Art Extraction
 	go func() {
 		value, errEx := u.media.ExtractAlbumArt(saveDir)
-		blob <- value
+		log.Println("✅ Internal: Extraction Finished")
+
+		// IMPORTANT: Send the error first because the main thread reads it first
 		albumExtError <- errEx
+		blobChan <- value
 	}()
-	//func 2
+
+	// Goroutine 2: HLS Segmentation
 	go func() {
-		segError <- u.media.CreateHLSSegments(saveDir, parentFolder, "segment_%03d.ts", "index.m3u8")
+		log.Println("✅ Internal: Starting HLS Segments")
+		errSeg := u.media.CreateHLSSegments(saveDir, parentFolder, "segment_%03d.ts", "index.m3u8")
+		segError <- errSeg
 	}()
 
-	albumErr := <-albumExtError
-	segErr := <-segError
+	// --- RECEIVE SECTION ---
 
+	// 1. Check HLS error
+	segErr := <-segError
 	if segErr != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to chunk file: " + segErr.Error()})
 		return
-	} else if albumErr != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to chunk file: " + albumErr.Error()})
+	}
+
+	// 2. Check Album Art error
+	albumErr := <-albumExtError
+	if albumErr != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get album art: " + albumErr.Error()})
 		return
 	}
-	ctx.JSON(http.StatusCreated, gin.H{"message": "music created succesfully"})
+
+	// 3. Finally, get the blob (now guaranteed to be available)
+	albumArt := <-blobChan
+	log.Println("✅ Success: Received blob of size", len(albumArt))
+
+	// Save to Database
+	err = u.songUsecase.SaveBlobImage(songMetadata.ID, albumArt)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save album art: " + err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{"message": "music created successfully"})
 }
 
 // SearchSongs implements IController.
 func (s *Controller) SearchSongs(ctx *gin.Context) {
 	titlePrefix := ctx.Query("title-prefix")
 	titlePrefix = strings.TrimSpace(titlePrefix)
-	offset := ctx.DefaultQuery("page-limit", fmt.Sprint(config.MAX_PAGE_SIZE))
-	page := ctx.DefaultQuery("page-number", "1")
+	pageLimit := ctx.DefaultQuery("page-limit", fmt.Sprint(config.MAX_PAGE_SIZE))
+	pageNumber := ctx.DefaultQuery("page-number", "1")
 	if titlePrefix == "" {
 		ctx.JSON(
 			http.StatusBadRequest,
@@ -134,7 +157,7 @@ func (s *Controller) SearchSongs(ctx *gin.Context) {
 	}
 	log.Println("✅ TitlePrefix =>", titlePrefix)
 	// Call the usecase to search songs
-	songs, err := s.songUsecase.SearchSongsByPrefix(titlePrefix, offset, page)
+	songs, err := s.songUsecase.SearchSongsByPrefix(titlePrefix, pageNumber, pageLimit)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to search songs: " + err.Error()})
 		return
