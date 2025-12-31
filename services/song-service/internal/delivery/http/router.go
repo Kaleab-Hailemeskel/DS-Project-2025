@@ -1,8 +1,10 @@
 package http
 
 import (
-	"github.com/gin-gonic/gin"
 	"song-service/api/internal/middleware"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 //	func RegisterUploadRoutes(router *gin.Engine, uploadController IUploadController) {
@@ -18,10 +20,13 @@ func RegisterUserRoutes(router *gin.RouterGroup, controller IController) {
 	router.GET("/get-all", controller.GetAllSongs)
 }
 
-
 func InitRouter(controller IController, middleWare middleware.IMiddleware) *gin.Engine {
 	router := gin.Default()
-
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
+	}))
 	// Register upload routes, search routes
 	authedRoute := router.Group("", middleWare.AuthUser)
 	RegisterUserRoutes(authedRoute, controller)
