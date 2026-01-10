@@ -4,5 +4,5 @@ SERVER_PORT=8080
 REDIS_ADDR=localhost:6379
 REDIS_PASSWORD=passthis
 REDIS_DB=0
-USER_SERVICE_PORT=8081 #! don't forget to change it for deployment
+USER_SERVICE_PORT=8081 
 USER_SERVICE_URL=localhost
