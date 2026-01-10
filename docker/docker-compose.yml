@@ -4,20 +4,16 @@ services:
     build: ../services/user-service
     container_name: user-service
     ports:
-      - "8001:8080"
-    environment:
-      - SERVICE_PORT=8080
-      - POSTGRES_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
-      - JWT_SECRET=dev-secret-change-me  # DEV ONLY - must replace in prod or use Docker secrets
-      - REDIS_URL=redis://redis:6379
-      - KAFKA_BROKERS=kafka:9092
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
+      - "8080:8080"
+    image: meta/user-api:v1.0
+    env_file:
+      - ../services/user-service/.env
+      
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    #   redis:
+    #     condition: service_healthy
     networks:
       - app-network
 
@@ -26,143 +22,78 @@ services:
   song-service:
     build: ../services/song-service
     container_name: song-service
-    image: meta/song-service:v1.0
-    # since the nginx will be routing to port 8080 internally, no need to expose ports here
-    # ports:
-    #   - "8003:8080"
+    ports:
+      - "8080:8080"
+    image: meta/song-api:v1.0
     env_file:
       - ../services/song-service/.env
-    depends_on:
-      song-db:
-        condition: service_healthy
-      redis-song-cache:
-        condition: service_healthy
-      # kafka:
-      #   condition: service_healthy
+    # depends_on:
+    #   song-db:
+    #     condition: service_healthy
+    #   redis-song-cache:
+    #     condition: service_healthy
     networks:
       - app-network
-      - public-api-gateway-network
-      - private-song-service-network
   
-  song-db:
-    image: postgres:16-alpine
-    container_name: song-db
-    env_file:
-      - ../services/song-service/.env
-    volumes:
-      - song_db_data:/var/lib/postgresql/data
-      - ./song-service/config/init.sql:/docker-entrypoint-initdb.d/init.sql
-    #! ONLY if database connection is failing from host machine, uncomment the ports mapping
-    # ports:
-    #   - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - private-song-service-network
+  # song-db:
+  #   image: postgres:16-alpine
+  #   container_name: song-db
+  #   env_file:
+  #     - ../services/song-service/.env
+  #   volumes:
+  #     - song_db_data:/var/lib/postgresql/data
+  #     - ./song-service/config/init.sql:/docker-entrypoint-initdb.d/init.sql
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - private-song-service-network
   
-  redis-song-cache:
-    image: redis:7-alpine
-    container_name: redis-song-cache
-    volumes:
-      # Use a relative path to a local folder (e.g., ./redis-data)
-      - ./redis-data:/data
-    # 'appendonly yes' is the most reliable way to save to local files
-    command: redis-server --appendonly yes --loglevel warning
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    networks:
-      - private-song-service-network
+  # redis-song-cache:
+  #   image: redis:7-alpine
+  #   container_name: redis-song-cache
+  #   volumes:
+  #     # Use a relative path to a local folder (e.g., ./redis-data)
+  #     - ./redis-data:/data
+  #   # 'appendonly yes' is the most reliable way to save to local files
+  #   command: redis-server --appendonly yes --loglevel warning
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+  #   networks:
+  #     - private-song-service-network
 
   # ====================== STREAMING SERVICES ======================
   streaming-service:
     build: ../services/streaming-service
-    image: meta/streaming-service:v1.0
+    image: meta/streaming-api:v1.0
     container_name: streaming-service
-    # since the nginx will be routing to port 8080 internally, no need to expose ports here
-    # ports:
-    #   - "8005:8080"
+    ports:
+      - "8080:8080"
     env_file:
       - ../services/streaming-service/.env  
-
-    #* just for the time being
-    # depends_on:
-      # kafka: 
-      #   condition: service_healthy
     networks:
-      - public-api-gateway-network
-
-
-
-    #* don't need a health check for this worker, since it's not a webserver 
-    #* we could do this thou
-    # healthcheck:
-    #   test: ["CMD", "ffmpeg", "-version"]
-    #   interval: 30s        # How often to check
-    #   timeout: 5s          # How long to wait for a response
-    #   retries: 3           # Failures needed to mark "unhealthy"
-    #   start_period: 10s    # Grace period at the very start
-  # ====================== API GATEWAY (Nginx) ======================
-  api-gateway:
-    image: nginx:alpine
-    container_name: api-gateway
-    ports:
-      - "8000:80"
-    volumes:
-      - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - user-service
-      - song-service
-      - streaming-service
-    networks:
-      - public-api-gateway-network
       - app-network
-      
 
-  # ====================== INFRASTRUCTURE ======================
-  # zookeeper:
-  #   image: confluentinc/cp-zookeeper:7.6.0
-  #   container_name: zookeeper
-  #   environment:
-  #     ZOOKEEPER_CLIENT_PORT: 2181
-  #     ZOOKEEPER_TICK_TIME: 2000
-  #   networks:
-  #     - app-network
-
-  # kafka:
-  #   image: confluentinc/cp-kafka:7.6.0
-  #   container_name: kafka
-  #   depends_on:
-  #     zookeeper:
-  #       condition: service_started
+  # ====================== API GATEWAY (Nginx) ======================
+  # api-gateway:
+  #   image: nginx:alpine
+  #   container_name: api-gateway
   #   ports:
-  #     - "9092:9092"
-  #     - "9093:9093"
-  #   environment:
-  #     KAFKA_BROKER_ID: 1
-  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  #     KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-  #     KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-  #     KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"  
-  #   ulimits:
-  #     nofile:
-  #       soft: 65536
-  #       hard: 65536
-  #   healthcheck:
-  #     test: ["CMD", "nc", "-z", "localhost", "9092"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 10
-    
+  #     - "8000:80"
+  #   volumes:
+  #     - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - user-service
+  #     - song-service
+  #     - streaming-service
   #   networks:
   #     - app-network
+  
 
   # ====================== DEVELOPER TOOLS ======================
   # pgadmin:
@@ -178,25 +109,10 @@ services:
   #   networks:
   #     - app-network
 
-  # kafdrop:
-  #   image: obsidiandynamics/kafdrop
-  #   container_name: kafdrop
-  #   ports:
-  #     - "9000:9000"
-  #   environment:
-  #     KAFKA_BROKERCONNECT: kafka:9093
-  #   depends_on:
-  #     - kafka
-  #   networks:
-  #     - app-network
 
-volumes:
-  song_db_data:
+# volumes:
+#   song_db_data:
 
 networks:
-  private-song-service-network:
-    driver: bridge
-  public-api-gateway-network:
-    driver: bridge
   app-network:
     driver: bridge
