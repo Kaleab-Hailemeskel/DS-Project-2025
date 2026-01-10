@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: meta/gin-streaming:latest
+          image: meta/streaming-api:v1.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -26,31 +26,48 @@ spec:
           env:
             - name: SERVER_PORT
               value: "8080"
-            
+
             # Uses the shared config created in step 2
             - name: SONG_ARCHIVE_DIR
               valueFrom:
                 configMapKeyRef:
                   name: song-api-storage-config
                   key: archive_dir
-            
-            
-            - name: REDIS_HOST
+
+            - name: REDIS_ADDR
               valueFrom:
                 configMapKeyRef:
                   name: streaming-api-config
-                  key: REDIS_HOST
+                  key: REDIS_ADDR
+
+            - name: REDIS_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-api-config
+                  key: REDIS_DB
+
+            - name: USER_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-api-config
+                  key: USER_SERVICE_URL
+            
+            - name: USER_SERVICE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-api-config
+                  key: USER_SERVICE_PORT
 
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: streaming-redis-creds
-                  key: password
+                  name: redis-app-secrets
+                  key: streaming-redis-creds
 
           volumeMounts:
             - name: media-storage
               mountPath: /app/media # Must match the value in song-api-storage-config
-      
+
       volumes:
         - name: media-storage
           persistentVolumeClaim:

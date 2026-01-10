@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: meta/song-api:latest 
+          image: meta/song-api:v1.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -57,6 +57,19 @@ spec:
                 configMapKeyRef:
                   name: song-api-config
                   key: POSTGRES_DB
+            # for user validation from user - service
+            - name: USER_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: USER_SERVICE_URL
+            - name: USER_SERVICE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-api-config
+                  key: USER_SERVICE_PORT
+
+
             - name: REDIS_ADDR
               valueFrom:
                 configMapKeyRef:
@@ -89,8 +102,8 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: song-api-redis-creds
-                  key: password
+                  name: redis-app-secrets
+                  key: song-redis-creds
             
           
 

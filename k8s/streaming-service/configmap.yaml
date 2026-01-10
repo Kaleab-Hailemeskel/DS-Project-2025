@@ -9,3 +9,5 @@ data:
 
   REDIS_ADDR: "streaming-redis:6379"
   REDIS_DB: "0"
+  USER_SERVICE_URL: "user-api"
+  USER_SERVICE_PORT: "80"

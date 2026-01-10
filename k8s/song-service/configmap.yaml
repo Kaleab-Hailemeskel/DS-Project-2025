@@ -16,3 +16,5 @@ data:
 
   REDIS_ADDR: "song-redis:6379"
   REDIS_DB: "0"
+  USER_SERVICE_URL: "user-api"
+  USER_SERVICE_PORT: "80"

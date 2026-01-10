@@ -2,46 +2,80 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: streaming-redis
-  namespace: default
-  labels:
-    app.kubernetes.io/name: streaming-redis
-    app.kubernetes.io/component: cache
 spec:
-  # References the Headless Service name (created separately)
   serviceName: "streaming-redis"
   replicas: 2
   selector:
     matchLabels:
-      app.kubernetes.io/name: streaming-redis
+      app: streaming-redis
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: streaming-redis
-        app.kubernetes.io/component: cache
+        app: streaming-redis
     spec:
       containers:
         - name: redis
-          image: redis:7-alpine
-          # Standard redis command with password protection and persistence
-          command: ["redis-server", "--requirepass", "$(REDIS_PASSWORD)", "--appendonly", "yes"]
+          image: docker.io/bitnami/redis:latest
+          command:
+            - bash
+            - -c
+            - |
+              [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
+              ordinal=${BASH_REMATCH[1]}
+              if [[ $ordinal -eq 0 ]]; then
+                export REDIS_REPLICATION_MODE=master
+              else
+                export REDIS_REPLICATION_MODE=slave
+              fi
+              /opt/bitnami/scripts/redis/entrypoint.sh /opt/bitnami/scripts/redis/run.sh
           env:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  # The new secret specific to the streaming service
-                  name: streaming-redis-creds
-                  # Standard key name established in previous steps
-                  key: password
+                  name: redis-app-secrets
+                  key: streaming-redis-creds
+            - name: REDIS_MASTER_HOST
+              value: "streaming-redis-0.streaming-redis"
+            - name: REDIS_MASTER_PORT_NUMBER
+              value: "6379"
+            - name: REDIS_MASTER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-app-secrets
+                  key: streaming-redis-creds
+          # THIS IS THE KEY: Only the Master will pass this check
+          readinessProbe:
+            exec:
+              command:
+                - bash
+                - -c
+                - |
+                  role=$(redis-cli -a "$REDIS_PASSWORD" info replication | grep role | tr -d '\r')
+                  if [ "$role" = "role:master" ]; then exit 0; else exit 1; fi
+            initialDelaySeconds: 5
+            periodSeconds: 5
           volumeMounts:
             - name: redis-data
-              mountPath: /data
-  
-  # Persistent storage for each replica
+              mountPath: /bitnami/redis/data
   volumeClaimTemplates:
-  - metadata:
-      name: redis-data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 1Gi
+
+---
+
+### The Single Address Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: streaming-redis
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    app: streaming-redis

@@ -1,12 +1,13 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: gin-app-ingress
+  name: song-app-ingress
   namespace: default
   annotations:
     # This ensures that if a user hits /auth/login,
     # the request is sent to the backend as /login
     nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/proxy-body-size: "25m"
 spec:
   ingressClassName: nginx
   rules:
@@ -16,28 +17,25 @@ spec:
 
           # http://song-app.test/song
           - path: /song/?(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: song-api
                 port:
                   number: 80
 
-          
           # Access this via http://song-app.test/streaming
           - path: /streaming/?(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: streaming-api
                 port:
-                  number: 80
-
-          
+                  number: 80          
           
           # Access this via http://song-app.test/user
           - path: /user/?(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific # it was "Prefix" before
             backend:
               service:
                 name: user-api
