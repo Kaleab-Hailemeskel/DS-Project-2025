@@ -4,12 +4,12 @@ import (
 	"streaming-service/internal/middleware"
 
 	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"8
 )
 
 func RegisterStreamRoutes(router *gin.RouterGroup, streamController IStreamController) {
 
-	router.GET("/:filename/index.m3u8", streamController.GetManifestFile)
+	router.GET("/:filename/index.m3u", streamController.GetManifestFile)
 	router.GET("/:filename/:segment", streamController.GetStreamFile)
 
 }
