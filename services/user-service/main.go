@@ -47,6 +47,8 @@ func main() {
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "User service is running!")
 	})
+
+	
 	http.HandleFunc("/register", app.RegisterHandler)
 	http.HandleFunc("/login", app.LoginHandler)
 
