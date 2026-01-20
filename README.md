@@ -1,62 +1,88 @@
-# DS-Project-2025
-### A music Streaming Service
-This is the GitHub README for a full-featured music streaming service designed to deliver a high-quality, uninterrupted audio experience. The platform is built for performance and scale, focusing on robust content delivery and a wide selection of music.
+# Meta Vibes Backend
 
-### ✨ Core Features
-- Adaptive Audio Streaming: Enjoy crystal-clear audio quality that seamlessly adjusts to your network conditions for uninterrupted listening. This feature ensures playback remains smooth even as bandwidth fluctuates.
+Distributed music platform backend composed of Go microservices, Nginx gateway, PostgreSQL, Redis, Kafka, and Kubernetes manifests. This file covers only the backend (Compose and K8s).
 
-- Global Content Delivery (CDN): We leverage a global Content Delivery Network (CDN) to distribute music files closer to every user. This results in fast load times and reliable playback, regardless of your geographical location.
+## What’s Inside
 
-- Search and Discovery: Powerful search functionality allows users to quickly find the artists, songs, or albums they are looking for.
+- Services: `services/` contains Go services (user, song, streaming). Compose also wires in playlist-service and adaptive-engine (images built from sibling paths if present).
+- Gateway: [api-gateway/nginx.conf](api-gateway/nginx.conf) reverse proxy for songs and streaming; user route commented for now.
+- Local orchestration: [docker/docker-compose-orginal.yml](docker/docker-compose-orginal.yml) full stack; [docker/docker-compose.yml](docker/docker-compose.yml) slim stack.
+- Data init: [docker/postgres/init.sql](docker/postgres/init.sql) seeds users, playlists, songs tables on first Postgres start.
+- Kubernetes: [k8s/](k8s) contains ingress, Postgres clusters (CloudNativePG), Redis StatefulSets, and per-service manifests.
+- Media: `SONG_ARCHIVE/` holds uploaded song assets.
 
-- User Profiles & Social Features: Users can manage their listening data, follow other accounts, and share music with friends.
+## Architecture Snapshot
 
+- API gateway: Nginx routes `/api/songs/*` to song-service and `/api/stream/*` to streaming-service; health at `/health`.
+- Services: Go HTTP APIs exposing users, songs (CRUD + upload), and streaming. Redis used for caching, Kafka for events, Postgres for persistence.
+- Infra: Postgres 16, Redis 7, Kafka + Zookeeper, pgAdmin, Kafdrop included in the full Compose stack.
 
-<img width="472" height="453" alt="image" src="https://github.com/user-attachments/assets/6f578580-628a-40b7-9fe6-0a129f0daf2e" />
+## Run Locally with Docker Compose (full stack)
 
-text## Features Implemented
-- Nginx reverse proxy (single entry point)
-- PostgreSQL with auto-initialized tables
-- Redis caching
-- Kafka + Zookeeper event bus
-- pgAdmin (DB GUI) – http://localhost:5050
-- Kafdrop (Kafka GUI) – http://localhost:9000
-- Health checks on every service
-- Docker Compose one-command deployment
+From the docker folder run the full environment (infra + all services + UIs):
 
-## How to Run (Team Instructions)
-
-### 1. Start everything (first time – takes ~2 minutes)
 ```bash
-cd docker
-docker compose up --build
-2. Future restarts
-Bashcd docker
-docker compose up -d
-3. Stop everything
-Bashdocker compose down -v
-Service URLs (via API Gateway
+cd Backend/DS-Project-2025/docker
+docker compose -f docker-compose-orginal.yml up --build
+```
 
-ServiceEndpointDirect PortAPI Gatewayhttp://localhost:80008000User Servicehttp://localhost:8000/api/users8001Playlist Servicehttp://localhost:8000/api/playlists8002Song Servicehttp://localhost:8000/api/songs8003Adaptive Enginehttp://localhost:8000/api/adaptive8004Streaming Servicehttp://localhost:8000/api/stream8005
-Quick health checks
-Bashcurl http://localhost:8000/health
-curl http://localhost:8000/api/users/health
-curl http://localhost:8000/api/playlists/health
-# ... etc
-Developer Tools
+Service endpoints
 
-pgAdmin → http://localhost:5050
-login: admin@admin.com / admin
-Kafdrop (Kafka UI) → http://localhost:9000
-PostgreSQL direct: localhost:5432 (user: postgres, pass: postgres)
+- Gateway: http://localhost:8000
+- User API: http://localhost:8001
+- Playlist API: http://localhost:8002
+- Song API: http://localhost:8003
+- Adaptive Engine: http://localhost:8004
+- Streaming API: http://localhost:8005
+- pgAdmin: http://localhost:5050 (admin@admin.com / admin)
+- Kafdrop: http://localhost:9000
+- Postgres: localhost:5432 (user postgres, password postgres)
 
-Database Tables (auto-created)
-SQLusers      (id, username, email, password_hash, created_at)
-playlists  (id, user_id → users.id, name, created_at)
-songs      (id, title, artist, duration, file_path, uploaded_at)
-Environment Variables (already set in compose)
-All services automatically receive:
-textPOSTGRES_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
-REDIS_URL=redis://redis:6379
-KAFKA_BROKERS=kafka:9092
-SERVICE_PORT=8080
+Stop and clean:
+
+```bash
+docker compose -f docker-compose-orginal.yml down -v
+```
+
+Notes
+
+- Postgres schema auto-seeds from [docker/postgres/init.sql](docker/postgres/init.sql) on first boot; data persists in the `postgres_data` volume.
+- Health checks guard Postgres, Redis, Kafka; wait until they are healthy before hitting APIs.
+- The slim [docker/docker-compose.yml](docker/docker-compose.yml) starts only services without infra; use it when you already have external databases/caches.
+
+### API Gateway routing
+
+- `/api/songs/*` → song-service (upload route increases `client_max_body_size` to 20 MB).
+- `/api/stream/*` → streaming-service.
+- `/health` → gateway 200 OK.
+- User route is present but commented; enable when user-service is deployed.
+
+### Database tables
+
+Created at startup: `users`, `playlists`, `songs` (UUID primary key) as defined in [docker/postgres/init.sql](docker/postgres/init.sql).
+
+## Kubernetes Manifests (k8s/)
+
+- Ingress: [k8s/nginx/ingress.yaml](k8s/nginx/ingress.yaml) routes `song-app.test` host to song-api, streaming-api, and user-api services with CORS and 25 MB body limit.
+- Postgres: [k8s/postgres-sql/cluster.yaml](k8s/postgres-sql/cluster.yaml) provisions two CloudNativePG clusters (`song-postgres` and `user-postgres`, 2 instances each, 5Gi storage) bootstrapped from secrets.
+- Redis: [k8s/redis-cache/song-redis-statefulset.yaml](k8s/redis-cache/song-redis-statefulset.yaml) defines a 2-replica StatefulSet with master election and a single service endpoint.
+- Services: service-specific folders (song-service, streaming-service, user-service) contain Deployment/Service/ConfigMap manifests; update image tags and secrets before applying.
+- Secrets: raw and sealed secrets templates exist under `k8s/postgres-sql` and `k8s/redis-cache`; replace placeholder values for production.
+
+Apply example (after configuring images/secrets and pointing DNS for `song-app.test`):
+
+```bash
+kubectl apply -f k8s/postgres-sql/
+kubectl apply -f k8s/redis-cache/
+kubectl apply -f k8s/song-service/
+kubectl apply -f k8s/streaming-service/
+kubectl apply -f k8s/user-service/
+kubectl apply -f k8s/nginx/ingress.yaml
+```
+
+## Troubleshooting
+
+- Ports in use: stop previous containers (`docker ps`) or change mappings in [docker/docker-compose-orginal.yml](docker/docker-compose-orginal.yml).
+- Services not healthy: `docker compose -f docker-compose-orginal.yml logs -f <service>`.
+- Fresh DB seed: remove the `postgres_data` volume, then rerun the stack.
+- Ingress unreachable: confirm hosts file/DNS maps `song-app.test` to cluster ingress IP and that the ingress class matches your controller.
