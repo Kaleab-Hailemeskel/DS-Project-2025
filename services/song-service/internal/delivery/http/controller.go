@@ -123,20 +123,19 @@ func (u *Controller) UploadFileToArchive(ctx *gin.Context) {
 
 	// 2. Check Album Art error
 	albumErr := <-albumExtError
-	if albumErr != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get album art: " + albumErr.Error()})
-		return
-	}
 
 	// 3. Finally, get the blob (now guaranteed to be available)
 	albumArt := <-blobChan
-	log.Println("✅ Success: Received blob of size", len(albumArt))
-
-	// Save to Database
-	err = u.songUsecase.SaveBlobImage(songMetadata.ID, albumArt)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save album art: " + err.Error()})
-		return
+	if albumErr != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to get album art: " + albumErr.Error()})
+	} else if albumArt == nil {
+		log.Println("✅ Success: Received blob of size", len(albumArt))
+		// Save to Database
+		err = u.songUsecase.SaveBlobImage(songMetadata.ID, albumArt)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save album art: " + err.Error()})
+			return
+		}
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{"message": "music created successfully"})
