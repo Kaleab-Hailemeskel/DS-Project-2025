@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audio Upload Form</title>
+    <style>
+      /* Base Styles */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: #f0f2f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .upload-container {
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        max-width: 550px; /* Widened slightly for the grid */
+      }
+
+      h2 {
+        color: #2c3e50;
+        margin-bottom: 30px;
+        text-align: center;
+        font-weight: 600;
+        position: relative;
+      }
+
+      h2::after {
+        content: "";
+        display: block;
+        width: 50px;
+        height: 4px;
+        background: #5cb85c;
+        margin: 10px auto;
+        border-radius: 2px;
+      }
+
+      /* Section Labels */
+      .section-title {
+        font-size: 0.9rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #4a4a4a;
+      }
+
+      /* Input Styling */
+      input[type="text"],
+      input[type="number"],
+      textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        outline: none;
+        background-color: #fafafa;
+      }
+
+      input:focus {
+        border-color: #5cb85c;
+        background-color: #fff;
+        box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.1);
+      }
+
+      /* Grid for Metadata */
+      .metadata-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      /* File Input Special Styling */
+      .file-input-wrapper {
+        background-color: #f8fff8;
+        border: 2px dashed #5cb85c;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 25px;
+      }
+
+      input[type="file"] {
+        cursor: pointer;
+      }
+
+      /* Submit Button */
+      .submit-btn {
+        background-color: #5cb85c;
+        color: white;
+        padding: 14px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: bold;
+        width: 100%;
+        margin-top: 10px;
+        transition: transform 0.1s, background-color 0.3s;
+      }
+
+      .submit-btn:hover {
+        background-color: #4cae4c;
+        transform: translateY(-1px);
+      }
+
+      .submit-btn:active {
+        transform: translateY(1px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="upload-container">
+      <h2>Song Management</h2>
+
+      <form
+        id="uploadForm"
+        action="http://song-app.test/song/upload"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <div class="section-title">Media File</div>
+        <div class="file-input-wrapper">
+          <label for="audioFile">Audio Track</label>
+          <input
+            type="file"
+            id="audioFile"
+            name="musicFile"
+            accept="audio/*"
+            required
+          />
+        </div>
+
+        <div class="section-title">Metadata</div>
+
+        <div class="form-group">
+          <label for="title">Song Title</label>
+          <input
+            type="text"
+            id="title"
+            placeholder="e.g. Bohemian Rhapsody"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="artist">Artist Name</label>
+          <input type="text" id="artist" placeholder="e.g. Queen" required />
+        </div>
+
+        <div class="metadata-grid">
+          <div class="form-group">
+            <label for="album">Album</label>
+            <input type="text" id="album" placeholder="A Night at the Opera" />
+          </div>
+          <div class="form-group">
+            <label for="genre">Genre</label>
+            <input type="text" id="genre" placeholder="Rock" />
+          </div>
+        </div>
+
+        <div class="metadata-grid">
+          <div class="form-group">
+            <label for="release_year">Release Year</label>
+            <input type="number" id="release_year" value="2024" />
+          </div>
+          <div class="form-group">
+            <label for="duration">Duration (Sec)</label>
+            <input type="number" id="duration" placeholder="240" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="image_url">Cover Image URL</label>
+          <input
+            type="text"
+            id="image_url"
+            placeholder="https://example.com/cover.jpg"
+          />
+        </div>
+
+        <input type="hidden" name="metadata" id="metadata_hidden" />
+
+        <button type="submit" class="submit-btn">Publish Song</button>
+      </form>
+    </div>
+
+    <script>
+      document
+        .getElementById("uploadForm")
+        .addEventListener("submit", async function (e) {
+          // 1. Prevent the default browser form submission
+          e.preventDefault();
+
+          const form = e.target;
+          const submitBtn = form.querySelector(".submit-btn");
+
+          // 2. Prepare Metadata
+          const songMetadata = {
+            title: document.getElementById("title").value,
+            artist: document.getElementById("artist").value,
+            album: document.getElementById("album").value,
+            genre: document.getElementById("genre").value,
+            release_year: parseInt(
+              document.getElementById("release_year").value
+            ),
+            duration_sec:
+              parseInt(document.getElementById("duration").value) || 0,
+          };
+
+          // 3. Create FormData object (required for multipart/form-data)
+          const formData = new FormData();
+          formData.append(
+            "musicFile",
+            document.getElementById("audioFile").files[0]
+          );
+          formData.append("metadata", JSON.stringify(songMetadata));
+
+          try {
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Uploading...";
+
+            // 4. Send the request with the Authorization header
+            const response = await fetch(form.action, {
+              method: "POST",
+              headers: {
+                // Replace 'YOUR_TOKEN_HERE' with your actual token logic
+                Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Njg5MTg3MTEsImlhdCI6MTc2ODkxNTExMSwic3ViIjoiMSJ9.lZORxuMha08HtGGX143kN6rHbYMp9bdtoGnLam0MWmo",
+              },
+              body: formData,
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              alert("Upload successful!");
+              console.log(result);
+            } else {
+              const errorText = await response.text();
+              alert("Upload failed: " + errorText);
+            }
+          } catch (error) {
+            console.error("Network error:", error);
+            alert("A network error occurred.");
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Publish Song";
+          }
+        });
+    </script>
+  </body>
+</html>
