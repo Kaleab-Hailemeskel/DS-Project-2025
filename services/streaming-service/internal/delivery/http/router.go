@@ -4,7 +4,7 @@ import (
 	"streaming-service/internal/middleware"
 
 	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"8
+	"github.com/gin-gonic/gin"
 )
 
 func RegisterStreamRoutes(router *gin.RouterGroup, streamController IStreamController) {
