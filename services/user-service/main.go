@@ -42,6 +42,8 @@ func main() {
 		jwtExpiry: jwtExpiry,
 		bcCost:    mustAtoi("BCRYPT_COST", 12),
 	}
+	// enbable CORS for all routes
+	http.Handle("/", enableCORS(http.DefaultServeMux))
 
 	// routes (gateway will proxy /api/users/ -> this service)
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -67,3 +69,19 @@ func main() {
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
+func enableCORS(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // Allow any origin, or replace "*" with your specific frontend URL
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+        // Handle preflight OPTIONS request
+        if r.Method == "OPTIONS" {
+            w.WriteHeader(http.StatusOK)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
+}
