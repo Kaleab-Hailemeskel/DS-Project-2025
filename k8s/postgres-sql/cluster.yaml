@@ -1,0 +1,52 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  # This creates the service: song-postgres-rw
+  name: song-postgres
+  namespace: default
+  labels:
+    app.kubernetes.io/name: song-postgres
+spec:
+  instances: 2
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: 5Gi
+
+  bootstrap:
+    initdb:
+      # Matches POSTGRES_DB in song-api-config
+      database: song_db
+      owner: song_db_owner 
+      secret:
+        # Matches the Secret created in the previous step
+        name: song-api-postgres-creds
+
+  monitoring:
+    enablePodMonitor: true
+
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  # This creates the service: user-postgres-rw
+  name: user-postgres
+  namespace: default
+  labels:
+    app.kubernetes.io/name: user-postgres
+spec:
+  instances: 2
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: 5Gi
+
+  bootstrap:
+    initdb:
+      # Domain-specific DB name for User API
+      database: user_db
+      owner: user_db_owner 
+      secret:
+        # Matches the Secret created in the previous step
+        name: user-api-postgres-creds
+
+  monitoring:
+    enablePodMonitor: true

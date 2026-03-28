@@ -1,0 +1,15 @@
+#! env file found here are for dockerization
+SEGMENT_DURATION=10
+SONG_ARCHIVE_DIR=/app/song_archive
+SERVER_PORT=8080
+POSTGRES_HOST=song-db
+POSTGRES_PORT=5432
+POSTGRES_USER=META_MUSIC_USER
+POSTGRES_PASSWORD=meta_music_password
+POSTGRES_DB=meta_music_db
+REDIS_ADDR=redis-song-cache:6379
+REDIS_PASSWORD=passthis
+REDIS_DB=0
+MAX_PAGE_SIZE=10
+USER_SERVICE_PORT=8081 #! don't forget to change the two at deployment
+USER_SERVICE_URL=localhost

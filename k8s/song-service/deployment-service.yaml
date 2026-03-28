@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: song-api
+  namespace: default
+  labels:
+    app.kubernetes.io/name: song-api
+    app.kubernetes.io/component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: song-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: song-api
+    spec:
+      containers:
+        - name: server
+          image: meta/song-api:v1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          
+          # Explicitly listing all variables in 'env' instead of 'envFrom'
+          env:
+            # --- ConfigMap Variables ---
+            - name: SEGMENT_DURATION
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: SEGMENT_DURATION
+            - name: MAX_PAGE_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: MAX_PAGE_SIZE
+            - name: SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: SERVER_PORT
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: POSTGRES_PORT
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: POSTGRES_DB
+            # for user validation from user - service
+            - name: USER_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: USER_SERVICE_URL
+            - name: USER_SERVICE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-api-config
+                  key: USER_SERVICE_PORT
+
+
+            - name: REDIS_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: REDIS_ADDR
+            - name: REDIS_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-config
+                  key: REDIS_DB
+            
+            # --- Storage Config ---
+            - name: SONG_ARCHIVE_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: song-api-storage-config
+                  key: archive_dir
+
+            # --- Secrets ---
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: song-api-postgres-creds
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: song-api-postgres-creds
+                  key: password
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-app-secrets
+                  key: song-redis-creds
+            
+          
+
+          volumeMounts:
+            - name: media-storage
+              mountPath: /app/media
+
+      volumes:
+        - name: media-storage
+          persistentVolumeClaim:
+            claimName: song-media-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: song-api
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: song-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080

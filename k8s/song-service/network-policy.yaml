@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-nginx-and-internal-apps
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: song-api # Traffic target
+  policyTypes:
+    - Ingress
+  ingress:
+    # Rule 1: External Traffic via Nginx
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+
+    # Rule 2: Inter-service communicatoin allowed to streaming service
+    - from:
+        - podSelector:
+            matchLabels:
+              app: streaming-api
+
+    # Rule 3: Inter-service communicatoin allowed to user service
+    - from:
+        - podSelector:
+            matchLabels:
+              app: user-api

@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: song-app-ingress
+  namespace: default
+  annotations:
+    # This ensures that if a user hits /auth/login,
+    # the request is sent to the backend as /login
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/proxy-body-size: "25m"
+
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: song-app.test
+      http:
+        paths:
+
+          # http://song-app.test/song
+          - path: /song/?(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: song-api
+                port:
+                  number: 80
+
+          # Access this via http://song-app.test/streaming
+          - path: /streaming/?(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: streaming-api
+                port:
+                  number: 80          
+          
+          # Access this via http://song-app.test/user
+          - path: /user/?(.*)
+            pathType: ImplementationSpecific # it was "Prefix" before
+            backend:
+              service:
+                name: user-api
+                port:
+                  number: 80

@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-streaming-api-traffic
+spec:
+  podSelector:
+    matchLabels:
+      # MATCH YOUR DEPLOYMENT LABELS EXACTLY
+      app.kubernetes.io/name: streaming-api
+  policyTypes:
+    - Ingress
+  ingress:
+    # 1. ALLOW NGINX (Using a simpler label or checking your NS label)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx # Common label, verify with 'kubectl get ns --show-labels'
+
+    # 2. ALLOW INTERNAL APPS
+    - from:
+        - podSelector:
+            matchLabels:
+              app: song-api
+        - podSelector:
+            matchLabels:
+              app: user-api
+
+    # 3. CRITICAL: ALLOW THE KUBELET (For Health Probes)
+    # Most CNIs require allowing the Node IP or specific ports for probes
+    - ports:
+        - port: 8080
+          protocol: TCP

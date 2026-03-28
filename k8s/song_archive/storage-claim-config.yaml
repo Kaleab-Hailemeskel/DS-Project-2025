@@ -1,0 +1,27 @@
+# storage-claim.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  # Matches claimName: song-media-pvc
+  name: song-media-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: hostpath
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+# shared-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # Matches configMapKeyRef name: song-api-storage-config
+  name: song-api-storage-config
+  namespace: default
+data:
+  # Matches the mountPath: /app/media
+  # Key matches configMapKeyRef key: archive_dir
+  archive_dir: "/app/media"

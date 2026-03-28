@@ -14,10 +14,13 @@ CREATE TABLE IF NOT EXISTS playlists (
 );
 
 CREATE TABLE IF NOT EXISTS songs (
-    id SERIAL PRIMARY KEY,
-    title TEXT NOT NULL,
-    artist TEXT,
-    duration INTEGER,
-    file_path TEXT,
-    uploaded_at TIMESTAMP DEFAULT NOW()
+    id UUID PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    artist VARCHAR(255) NOT NULL,
+    album VARCHAR(255),
+    duration_sec INTEGER NOT NULL,
+    release_year INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    genre VARCHAR(100),
+    image_url TEXT
 );
